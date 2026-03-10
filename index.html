@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Japoises Pro</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Japoises Pro">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/vHq0uS9.png">
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Japoises%20Pro%22%2C%22short_name%22%3A%22Japoises%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23050505%22%2C%22theme_color%22%3A%22%2300f2ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fi.imgur.com%2FvHq0uS9.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
+        .header { background: #111; padding: 15px; text-align: center; border-bottom: 2px solid var(--neon-blue); }
+        .logo-main { width: 120px; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        .display-panel { background: #111; margin: 10px; border-radius: 15px; border: 1px solid #222; padding: 15px; text-align: center; }
+        .chord-ticker { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: #000; border-radius: 10px; margin-bottom: 10px; justify-content: center; }
+        .chord-unit { min-width: 70px; height: 70px; line-height: 70px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 26px; border-radius: 12px; border: 1px solid var(--neon-blue); }
+        .control-group { padding: 10px 20px; }
+        .slider-label { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; color: #888; font-size: 14px; }
+        input[type=range] { width: 100%; -webkit-appearance: none; height: 12px; background: #222; border-radius: 6px; outline: none; border: 1px solid #333; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 15px var(--neon-blue); }
+        .mixer { display: flex; justify-content: space-around; gap: 8px; margin-top: 20px; }
+        .voice-strip { background: #111; padding: 15px 5px; border-radius: 15px; width: 31%; text-align: center; border: 2px solid #222; }
+        .voice-strip.active { border-color: var(--neon-blue); background: #001a1d; }
+        .v-label { font-size: 11px; margin-bottom: 10px; color: #888; font-weight: bold; }
+        .note-name { font-size: 22px; font-weight: bold; color: var(--neon-blue); margin-top: 10px; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 15px; height: 120px; background: #222; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #222; z-index: 100; }
+        .btn-action { background: #1a1a1a; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 10px 18px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 28px; margin-top: -35px; box-shadow: 0 0 25px rgba(0,242,255,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <img src="https://i.imgur.com/vHq0uS9.png" class="logo-main" alt="Logo">
+    <div style="font-size: 22px; font-weight: 900; letter-spacing: 5px; color: var(--neon-blue);">JAPOISES PRO</div>
+</div>
+
+<div class="display-panel">
+    <div class="chord-ticker">
+        <div class="chord-unit" id="currChord">--</div>
+    </div>
+    <div style="color: var(--neon-orange); font-size: 14px; font-weight: bold;">
+        BPM: <span id="bpmText">120</span> | <span id="tonalidad">TONO: DO</span>
+    </div>
+</div>
+
+<div class="control-group">
+    <div class="slider-label"><span>GRAVE</span><span>2 OCTAVAS</span><span>AGUDO</span></div>
+    <input type="range" id="masterPitch" min="-12" max="12" value="0">
+    
+    <div class="mixer">
+        <div class="voice-strip active">
+            <div class="v-label">1ra VOZ</div>
+            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1">
+            <div class="note-name" id="n1">Do</div>
+        </div>
+        <div class="voice-strip">
+            <div class="v-label">2da VOZ</div>
+            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0">
+            <div class="note-name" id="n2">Mi</div>
+        </div>
+        <div class="voice-strip">
+            <div class="v-label">3ra VOZ</div>
+            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0">
+            <div class="note-name" id="n3">Sol</div>
+        </div>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <button class="btn-action" onclick="document.getElementById('fileLoader').click()">CARGAR</button>
+    <button class="btn-play" id="playBtn">▶</button>
+    <button class="btn-action" id="metronomeBtn">CLIC</button>
+</div>
+
+<input type="file" id="fileLoader" style="display:none" accept="audio/*">
+
+<script>
+    const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+    const triadas = {
+        "Do": ["Do", "Mi", "Sol"], "Do#": ["Do#", "Fa", "Sol#"], "Re": ["Re", "Fa#", "La"],
+        "Re#": ["Re#", "Sol", "La#"], "Mi": ["Mi", "Sol#", "Si"], "Fa": ["Fa", "La", "Do"],
+        "Fa#": ["Fa#", "La#", "Do#"], "Sol": ["Sol", "Si", "Re"], "Sol#": ["Sol#", "Do", "Re#"],
+        "La": ["La", "Do#", "Mi"], "La#": ["La#", "Re", "Fa"], "Si": ["Si", "Re#", "Fa#"]
+    };
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let mainBuffer, sourceNode, isPlaying = false;
+
+    document.getElementById('fileLoader').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const arrayBuffer = await file.arrayBuffer();
+        mainBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        alert("Pista cargada. Lista para modificar.");
+    });
+
+    const pitchSlider = document.getElementById('masterPitch');
+    pitchSlider.addEventListener('input', () => {
+        const val = parseInt(pitchSlider.value);
+        const idx = (val >= 0) ? val % 12 : (12 + (val % 12)) % 12;
+        const notaTonica = notas[idx];
+        
+        document.getElementById('tonalidad').innerText = `TONO: ${notaTonica.toUpperCase()}`;
+        document.getElementById('currChord').innerText = notaTonica;
+        
+        const t = triadas[notaTonica];
+        document.getElementById('n1').innerText = t[0];
+        document.getElementById('n2').innerText = t[1];
+        document.getElementById('n3').innerText = t[2];
+        
+        if (sourceNode && isPlaying) {
+            sourceNode.playbackRate.value = Math.pow(2, val / 12);
+        }
+    });
+
+    document.getElementById('playBtn').onclick = () => {
+        if (!mainBuffer) return alert("Carga un audio primero.");
+        
+        if (isPlaying) {
+            sourceNode.stop();
+            document.getElementById('playBtn').innerText = "▶";
+            isPlaying = false;
+        } else {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = mainBuffer;
+            sourceNode.connect(audioCtx.destination);
+            
+            const val = parseInt(pitchSlider.value);
+            sourceNode.playbackRate.value = Math.pow(2, val / 12);
+            
+            sourceNode.start(0);
+            document.getElementById('playBtn').innerText = "⏹";
+            isPlaying = true;
+        }
+    };
+
+    document.getElementById('metronomeBtn').onclick = () => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    };
+</script>
+</body>
+</html>
