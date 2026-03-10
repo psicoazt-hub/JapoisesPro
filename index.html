@@ -63,4 +63,181 @@
 
 <div class="control-group">
     <div class="slider-label"><span>GRAVE (-12)</span><span>OCTAVADOR</span><span>AGUDO (+12)</span></div>
+    <input type="range" id="masterPitch" min="-12" max="12" value="0">
     
+    <div class="mixer">
+        <div class="voice-strip">
+            <div class="v-label">BAJOS/PISTA</div>
+            <input type="range" class="vol-slider" id="eqLow" min="0" max="2" step="0.1" value="1">
+            <div class="note-name" id="n1">Do</div>
+        </div>
+        <div class="voice-strip">
+            <div class="v-label">MEDIOS/VOZ</div>
+            <input type="range" class="vol-slider" id="eqMid" min="0" max="2" step="0.1" value="1">
+            <div class="note-name" id="n2">Mi</div>
+        </div>
+        <div class="voice-strip">
+            <div class="v-label">AGUDOS/2DA</div>
+            <input type="range" class="vol-slider" id="eqHigh" min="0" max="2" step="0.1" value="1">
+            <div class="note-name" id="n3">Sol</div>
+        </div>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <button class="btn-action" onclick="document.getElementById('fileLoader').click()">CARGAR</button>
+    <button class="btn-action btn-rec" id="recordBtn">GUARDAR</button>
+    <button class="btn-play" id="playBtn">▶</button>
+    <button class="btn-action" id="metronomeBtn">CLIC</button>
+</div>
+
+<input type="file" id="fileLoader" style="display:none" accept="audio/*">
+
+<script>
+    const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+    const triadas = {
+        "Do": ["Do", "Mi", "Sol"], "Do#": ["Do#", "Fa", "Sol#"], "Re": ["Re", "Fa#", "La"],
+        "Re#": ["Re#", "Sol", "La#"], "Mi": ["Mi", "Sol#", "Si"], "Fa": ["Fa", "La", "Do"],
+        "Fa#": ["Fa#", "La#", "Do#"], "Sol": ["Sol", "Si", "Re"], "Sol#": ["Sol#", "Do", "Re#"],
+        "La": ["La", "Do#", "Mi"], "La#": ["La#", "Re", "Fa"], "Si": ["Si", "Re#", "Fa#"]
+    };
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let mainBuffer, sourceNode, isPlaying = false;
+    let filterLow, filterMid, filterHigh;
+    let mediaRecorder, destNode, chunks = [];
+    let isRecording = false;
+
+    function setupFilters() {
+        filterLow = audioCtx.createBiquadFilter();
+        filterLow.type = "lowshelf";
+        filterLow.frequency.value = 300;
+
+        filterMid = audioCtx.createBiquadFilter();
+        filterMid.type = "peaking";
+        filterMid.frequency.value = 1000;
+        filterMid.Q.value = 1;
+
+        filterHigh = audioCtx.createBiquadFilter();
+        filterHigh.type = "highshelf";
+        filterHigh.frequency.value = 3000;
+
+        destNode = audioCtx.createMediaStreamDestination();
+    }
+    setupFilters();
+
+    document.getElementById('fileLoader').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const arrayBuffer = await file.arrayBuffer();
+        mainBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        alert("Pista lista para taller, socio.");
+    });
+
+    const pitchSlider = document.getElementById('masterPitch');
+    pitchSlider.addEventListener('input', () => {
+        const val = parseInt(pitchSlider.value);
+        const idx = (val >= 0) ? val % 12 : (12 + (val % 12)) % 12;
+        const notaTonica = notas[idx];
+        
+        document.getElementById('tonalidad').innerText = `TONO: ${notaTonica.toUpperCase()}`;
+        document.getElementById('currChord').innerText = notaTonica;
+        
+        const t = triadas[notaTonica];
+        document.getElementById('n1').innerText = t[0];
+        document.getElementById('n2').innerText = t[1];
+        document.getElementById('n3').innerText = t[2];
+        
+        if (sourceNode && isPlaying) {
+            sourceNode.playbackRate.value = Math.pow(2, val / 12);
+        }
+    });
+
+    document.getElementById('eqLow').oninput = (e) => { if(filterLow) filterLow.gain.value = (e.target.value - 1) * 20; };
+    document.getElementById('eqMid').oninput = (e) => { if(filterMid) filterMid.gain.value = (e.target.value - 1) * 20; };
+    document.getElementById('eqHigh').oninput = (e) => { if(filterHigh) filterHigh.gain.value = (e.target.value - 1) * 20; };
+
+    document.getElementById('playBtn').onclick = () => {
+        if (!mainBuffer) return alert("Métele un audio primero.");
+        if (isPlaying) {
+            sourceNode.stop();
+            document.getElementById('playBtn').innerText = "▶";
+            isPlaying = false;
+        } else {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = mainBuffer;
+            
+            sourceNode.connect(filterLow);
+            filterLow.connect(filterMid);
+            filterMid.connect(filterHigh);
+            filterHigh.connect(audioCtx.destination);
+            filterHigh.connect(destNode);
+            
+            const val = parseInt(pitchSlider.value);
+            sourceNode.playbackRate.value = Math.pow(2, val / 12);
+            
+            sourceNode.start(0);
+            document.getElementById('playBtn').innerText = "⏹";
+            isPlaying = true;
+        }
+    };
+
+    document.getElementById('recordBtn').onclick = () => {
+        if (!isRecording) {
+            chunks = [];
+            mediaRecorder = new MediaRecorder(destNode.stream);
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Japoises_Pro_Render.ogg';
+                a.click();
+            };
+            mediaRecorder.start();
+            document.getElementById('recordBtn').style.background = "var(--neon-red)";
+            document.getElementById('recordBtn').style.color = "#fff";
+            document.getElementById('recordBtn').innerText = "PARAR";
+            isRecording = true;
+        } else {
+            mediaRecorder.stop();
+            document.getElementById('recordBtn').style.background = "#1a1a1a";
+            document.getElementById('recordBtn').style.color = "var(--neon-red)";
+            document.getElementById('recordBtn').innerText = "GUARDAR";
+            isRecording = false;
+        }
+    };
+
+    let metronomoInterval;
+    let metronomoActivo = false;
+    document.getElementById('metronomeBtn').onclick = () => {
+        if (metronomoActivo) {
+            clearInterval(metronomoInterval);
+            document.getElementById('metronomeBtn').style.background = "#1a1a1a";
+            document.getElementById('metronomeBtn').style.color = "var(--neon-blue)";
+            metronomoActivo = false;
+        } else {
+            const bpm = parseInt(document.getElementById('bpmText').innerText) || 120;
+            const msPorBeat = 60000 / bpm;
+            document.getElementById('metronomeBtn').style.background = "var(--neon-orange)";
+            document.getElementById('metronomeBtn').style.color = "#000";
+            metronomoActivo = true;
+
+            metronomoInterval = setInterval(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 1000;
+                gain.gain.setValueAtTime(1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            }, msPorBeat);
+        }
+    };
+</script>
+</body>
+</html>
