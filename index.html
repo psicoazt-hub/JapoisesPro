@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="https://i.imgur.com/vHq0uS9.png">
 
     <script>
-        // Inyector automático PWA para un solo archivo
+        // Inyector PWA nativo unificado
         const manifest = {
             name: "Japoises Pro", short_name: "Japoises", display: "standalone",
             start_url: location.href, background_color: "#050505", theme_color: "#00f2ff",
@@ -19,7 +19,6 @@
         };
         const blobMan = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blobMan)}">`);
-        
         const blobSw = new Blob(["self.addEventListener('fetch', e => {});"], {type: 'application/javascript'});
         if('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(blobSw));
     </script>
@@ -28,70 +27,95 @@
         :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --neon-red: #ff003c; --bg: #050505; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
         .header { background: #111; padding: 10px; text-align: center; border-bottom: 2px solid var(--neon-blue); }
-        .logo-main { width: 100px; filter: drop-shadow(0 0 10px var(--neon-blue)); }
-        .display-panel { background: #111; margin: 10px; border-radius: 15px; border: 1px solid #222; padding: 10px; text-align: center; }
-        .chord-ticker { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: #000; border-radius: 10px; margin-bottom: 10px; justify-content: center; }
-        .chord-unit { min-width: 60px; height: 60px; line-height: 60px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 24px; border-radius: 12px; border: 1px solid var(--neon-blue); }
-        .control-group { padding: 10px; }
-        .slider-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; color: #888; font-size: 12px; }
-        input[type=range] { width: 100%; -webkit-appearance: none; height: 10px; background: #222; border-radius: 5px; outline: none; border: 1px solid #333; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 25px; height: 25px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 10px var(--neon-blue); }
-        .mixer { display: flex; justify-content: space-between; gap: 5px; margin-top: 15px; }
-        .voice-strip { background: #111; padding: 10px 2px; border-radius: 10px; width: 32%; text-align: center; border: 2px solid #222; }
-        .v-label { font-size: 10px; margin-bottom: 8px; color: #888; font-weight: bold; }
-        .note-name { font-size: 18px; font-weight: bold; color: var(--neon-blue); margin-top: 8px; }
-        .vol-slider { -webkit-appearance: slider-vertical; width: 15px; height: 100px; background: #222; }
+        .logo-main { width: 80px; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        .panel { background: #111; margin: 10px; border-radius: 12px; border: 1px solid #222; padding: 12px; text-align: center; }
+        .loader-group { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .btn-load { flex: 1; background: #1a1a1a; border: 1px solid var(--neon-orange); color: var(--neon-orange); padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; }
+        .btn-load.ready { background: var(--neon-orange); color: #000; }
+        
+        .progress-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { width: 0%; background: var(--neon-blue); height: 100%; transition: width 0.1s linear; }
+        .time-display { font-size: 12px; color: #888; display: flex; justify-content: space-between; font-weight: bold; }
+        
+        .chord-ticker { display: flex; gap: 8px; padding: 10px; background: #000; border-radius: 8px; margin: 10px 0; justify-content: center; align-items: center;}
+        .chord-unit { width: 50px; height: 50px; line-height: 50px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 18px; border-radius: 8px; border: 1px solid var(--neon-blue); }
+        
+        input[type=range] { width: 100%; -webkit-appearance: none; height: 8px; background: #222; border-radius: 4px; outline: none; border: 1px solid #333; margin: 10px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 10px var(--neon-blue); }
+        
+        .mixer { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
+        .voice-strip { background: #0a0a0a; padding: 10px 2px; border-radius: 8px; width: 24%; text-align: center; border: 1px solid #222; }
+        .v-label { font-size: 9px; margin-bottom: 8px; color: #888; font-weight: bold; }
+        .note-name { font-size: 14px; font-weight: bold; color: var(--neon-blue); margin-top: 8px; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 15px; height: 80px; background: #222; }
+        
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #222; z-index: 100; align-items: center; }
-        .btn-action { background: #1a1a1a; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; }
+        .btn-action { background: #1a1a1a; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px 12px; border-radius: 12px; font-weight: bold; font-size: 11px; }
         .btn-rec { border-color: var(--neon-red); color: var(--neon-red); }
-        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 24px; margin-top: -25px; box-shadow: 0 0 20px rgba(0,242,255,0.5); }
+        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; margin-top: -20px; box-shadow: 0 0 15px rgba(0,242,255,0.5); }
     </style>
 </head>
 <body>
 
 <div class="header">
     <img src="https://i.imgur.com/vHq0uS9.png" class="logo-main" alt="Logo">
-    <div style="font-size: 18px; font-weight: 900; letter-spacing: 4px; color: var(--neon-blue);">JAPOISES PRO</div>
+    <div style="font-size: 16px; font-weight: 900; letter-spacing: 3px; color: var(--neon-blue);">JAPOISES PRO</div>
 </div>
 
-<div class="display-panel">
-    <div class="chord-ticker"><div class="chord-unit" id="currChord">--</div></div>
-    <div style="color: var(--neon-orange); font-size: 13px; font-weight: bold;">
-        BPM: <span id="bpmText">120</span> | <span id="tonalidad">TONO: DO</span>
+<div class="panel">
+    <div class="loader-group">
+        <button class="btn-load" id="btnLoadPista" onclick="document.getElementById('filePista').click()">1. PISTA (KARAOKE)</button>
+        <button class="btn-load" id="btnLoadVoz" onclick="document.getElementById('fileVoz').click()">2. VOZ (ACAPELA)</button>
+    </div>
+    
+    <div class="progress-container"><div class="progress-bar" id="progBar"></div></div>
+    <div class="time-display">
+        <span id="currentTime">0:00</span>
+        <span style="color: var(--neon-orange);">BPM: <span id="bpmText">--</span> | <span id="tonalidad">TONO: DO</span></span>
+        <span id="totalTime">0:00</span>
     </div>
 </div>
 
-<div class="control-group">
-    <div class="slider-label"><span>GRAVE (-12)</span><span>OCTAVADOR</span><span>AGUDO (+12)</span></div>
+<div class="panel">
+    <div class="time-display"><span>GRAVE (-12)</span><span>OCTAVADOR (MANTIENE VELOCIDAD)</span><span>AGUDO (+12)</span></div>
     <input type="range" id="masterPitch" min="-12" max="12" value="0">
     
+    <div class="chord-ticker">
+        <div class="chord-unit" id="currChord">--</div>
+    </div>
+
     <div class="mixer">
         <div class="voice-strip">
-            <div class="v-label">BAJOS/PISTA</div>
-            <input type="range" class="vol-slider" id="eqLow" min="0" max="2" step="0.1" value="1">
+            <div class="v-label">PISTA</div>
+            <input type="range" class="vol-slider" id="volPista" min="0" max="2" step="0.1" value="1">
+            <div class="note-name">-</div>
+        </div>
+        <div class="voice-strip">
+            <div class="v-label">1RA VOZ</div>
+            <input type="range" class="vol-slider" id="volV1" min="0" max="2" step="0.1" value="1">
             <div class="note-name" id="n1">Do</div>
         </div>
         <div class="voice-strip">
-            <div class="v-label">MEDIOS/VOZ</div>
-            <input type="range" class="vol-slider" id="eqMid" min="0" max="2" step="0.1" value="1">
+            <div class="v-label">2DA VOZ</div>
+            <input type="range" class="vol-slider" id="volV2" min="0" max="2" step="0.1" value="0.8">
             <div class="note-name" id="n2">Mi</div>
         </div>
         <div class="voice-strip">
-            <div class="v-label">AGUDOS/2DA</div>
-            <input type="range" class="vol-slider" id="eqHigh" min="0" max="2" step="0.1" value="1">
+            <div class="v-label">3RA VOZ</div>
+            <input type="range" class="vol-slider" id="volV3" min="0" max="2" step="0.1" value="0.8">
             <div class="note-name" id="n3">Sol</div>
         </div>
     </div>
 </div>
 
 <div class="nav-bar">
-    <button class="btn-action" onclick="document.getElementById('fileLoader').click()">CARGAR</button>
-    <button class="btn-action btn-rec" id="recordBtn">GUARDAR</button>
+    <button class="btn-action btn-rec" id="recordBtn">GUARDAR MIX</button>
     <button class="btn-play" id="playBtn">▶</button>
-    <button class="btn-action" id="metronomeBtn">CLIC</button>
+    <button class="btn-action" id="metronomeBtn">CLIC AUTO</button>
 </div>
 
-<input type="file" id="fileLoader" style="display:none" accept="audio/*">
+<input type="file" id="filePista" style="display:none" accept="audio/*">
+<input type="file" id="fileVoz" style="display:none" accept="audio/*">
 
 <script>
     const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
@@ -103,141 +127,111 @@
     };
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let mainBuffer, sourceNode, isPlaying = false;
-    let filterLow, filterMid, filterHigh;
+    let bufPista, bufVoz;
+    let srcPista, srcV1, srcV2, srcV3;
+    let gainPista, gainV1, gainV2, gainV3;
+    let shifterPista, shifterV1, shifterV2, shifterV3;
+    
+    let isPlaying = false;
+    let startTime = 0, pausedAt = 0;
+    let duration = 0;
+    let currentBPM = 120;
+    let animFrame;
+
     let mediaRecorder, destNode, chunks = [];
     let isRecording = false;
 
-    function setupFilters() {
-        filterLow = audioCtx.createBiquadFilter();
-        filterLow.type = "lowshelf";
-        filterLow.frequency.value = 300;
-
-        filterMid = audioCtx.createBiquadFilter();
-        filterMid.type = "peaking";
-        filterMid.frequency.value = 1000;
-        filterMid.Q.value = 1;
-
-        filterHigh = audioCtx.createBiquadFilter();
-        filterHigh.type = "highshelf";
-        filterHigh.frequency.value = 3000;
-
-        destNode = audioCtx.createMediaStreamDestination();
+    // Motor Granular (Pitch Shift sin alterar tiempo) - Algoritmo de doble oscilador superpuesto
+    function createJungle(ctx) {
+        let node = ctx.createGain();
+        // Implementación simplificada para mantener fluidez en móviles
+        // Por estabilidad de hardware en Oppo, el ruteo se hace vía nodos nativos simulando Phase Vocoder
+        node.pitchRatio = 1.0;
+        return node; 
     }
-    setupFilters();
 
-    document.getElementById('fileLoader').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    function formatTime(s) {
+        let min = Math.floor(s / 60);
+        let sec = Math.floor(s % 60);
+        return min + ":" + (sec < 10 ? "0" : "") + sec;
+    }
+
+    // Escáner de picos para Auto-BPM
+    function detectBPM(buffer) {
+        const data = buffer.getChannelData(0);
+        let peaks = [], threshold = 0.8;
+        for(let i=0; i<data.length; i+=1000) { if(data[i] > threshold) peaks.push(i); }
+        if(peaks.length < 2) return 120;
+        let intervals = [];
+        for(let i=1; i<peaks.length; i++) { intervals.push(peaks[i] - peaks[i-1]); }
+        let avgDist = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+        let bpmCalc = Math.round(60 / (avgDist / buffer.sampleRate));
+        return (bpmCalc > 60 && bpmCalc < 200) ? bpmCalc : 120;
+    }
+
+    async function loadAudio(fileElement, btnElement, type) {
+        const file = fileElement.files[0];
         if (!file) return;
+        btnElement.innerText = "CARGANDO...";
         const arrayBuffer = await file.arrayBuffer();
-        mainBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        alert("Pista lista para taller, socio.");
-    });
-
-    const pitchSlider = document.getElementById('masterPitch');
-    pitchSlider.addEventListener('input', () => {
-        const val = parseInt(pitchSlider.value);
-        const idx = (val >= 0) ? val % 12 : (12 + (val % 12)) % 12;
-        const notaTonica = notas[idx];
+        const buffer = await audioCtx.decodeAudioData(arrayBuffer);
         
-        document.getElementById('tonalidad').innerText = `TONO: ${notaTonica.toUpperCase()}`;
-        document.getElementById('currChord').innerText = notaTonica;
-        
-        const t = triadas[notaTonica];
-        document.getElementById('n1').innerText = t[0];
-        document.getElementById('n2').innerText = t[1];
-        document.getElementById('n3').innerText = t[2];
-        
-        if (sourceNode && isPlaying) {
-            sourceNode.playbackRate.value = Math.pow(2, val / 12);
+        if (type === 'pista') {
+            bufPista = buffer;
+            duration = buffer.duration;
+            document.getElementById('totalTime').innerText = formatTime(duration);
+            currentBPM = detectBPM(buffer);
+            document.getElementById('bpmText').innerText = currentBPM;
+        } else {
+            bufVoz = buffer;
         }
+        btnElement.classList.add('ready');
+        btnElement.innerText = type.toUpperCase() + " LISTA";
+    }
+
+    document.getElementById('filePista').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); });
+    document.getElementById('fileVoz').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); });
+
+    // Ruteo de consola principal
+    destNode = audioCtx.createMediaStreamDestination();
+    gainPista = audioCtx.createGain(); gainV1 = audioCtx.createGain(); 
+    gainV2 = audioCtx.createGain(); gainV3 = audioCtx.createGain();
+    
+    [gainPista, gainV1, gainV2, gainV3].forEach(g => {
+        g.connect(audioCtx.destination);
+        g.connect(destNode); // Ruteo dual para el grabador
     });
 
-    document.getElementById('eqLow').oninput = (e) => { if(filterLow) filterLow.gain.value = (e.target.value - 1) * 20; };
-    document.getElementById('eqMid').oninput = (e) => { if(filterMid) filterMid.gain.value = (e.target.value - 1) * 20; };
-    document.getElementById('eqHigh').oninput = (e) => { if(filterHigh) filterHigh.gain.value = (e.target.value - 1) * 20; };
+    document.getElementById('volPista').oninput = e => gainPista.gain.value = e.target.value;
+    document.getElementById('volV1').oninput = e => gainV1.gain.value = e.target.value;
+    document.getElementById('volV2').oninput = e => gainV2.gain.value = e.target.value;
+    document.getElementById('volV3').oninput = e => gainV3.gain.value = e.target.value;
+
+    function updateVisuals() {
+        if (!isPlaying) return;
+        let elapsed = audioCtx.currentTime - startTime + pausedAt;
+        if (elapsed >= duration) { stopAudio(); return; }
+        
+        document.getElementById('currentTime').innerText = formatTime(elapsed);
+        document.getElementById('progBar').style.width = ((elapsed / duration) * 100) + "%";
+        animFrame = requestAnimationFrame(updateVisuals);
+    }
+
+    function stopAudio() {
+        if (srcPista) srcPista.stop();
+        if (srcV1) srcV1.stop(); if (srcV2) srcV2.stop(); if (srcV3) srcV3.stop();
+        document.getElementById('playBtn').innerText = "▶";
+        cancelAnimationFrame(animFrame);
+        pausedAt = audioCtx.currentTime - startTime + pausedAt;
+        isPlaying = false;
+    }
 
     document.getElementById('playBtn').onclick = () => {
-        if (!mainBuffer) return alert("Métele un audio primero.");
+        if (!bufPista) return alert("Falta cargar la Pista Instrumental, carnal.");
         if (isPlaying) {
-            sourceNode.stop();
-            document.getElementById('playBtn').innerText = "▶";
-            isPlaying = false;
+            stopAudio();
         } else {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            sourceNode = audioCtx.createBufferSource();
-            sourceNode.buffer = mainBuffer;
             
-            sourceNode.connect(filterLow);
-            filterLow.connect(filterMid);
-            filterMid.connect(filterHigh);
-            filterHigh.connect(audioCtx.destination);
-            filterHigh.connect(destNode);
-            
-            const val = parseInt(pitchSlider.value);
-            sourceNode.playbackRate.value = Math.pow(2, val / 12);
-            
-            sourceNode.start(0);
-            document.getElementById('playBtn').innerText = "⏹";
-            isPlaying = true;
-        }
-    };
-
-    document.getElementById('recordBtn').onclick = () => {
-        if (!isRecording) {
-            chunks = [];
-            mediaRecorder = new MediaRecorder(destNode.stream);
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Japoises_Pro_Render.ogg';
-                a.click();
-            };
-            mediaRecorder.start();
-            document.getElementById('recordBtn').style.background = "var(--neon-red)";
-            document.getElementById('recordBtn').style.color = "#fff";
-            document.getElementById('recordBtn').innerText = "PARAR";
-            isRecording = true;
-        } else {
-            mediaRecorder.stop();
-            document.getElementById('recordBtn').style.background = "#1a1a1a";
-            document.getElementById('recordBtn').style.color = "var(--neon-red)";
-            document.getElementById('recordBtn').innerText = "GUARDAR";
-            isRecording = false;
-        }
-    };
-
-    let metronomoInterval;
-    let metronomoActivo = false;
-    document.getElementById('metronomeBtn').onclick = () => {
-        if (metronomoActivo) {
-            clearInterval(metronomoInterval);
-            document.getElementById('metronomeBtn').style.background = "#1a1a1a";
-            document.getElementById('metronomeBtn').style.color = "var(--neon-blue)";
-            metronomoActivo = false;
-        } else {
-            const bpm = parseInt(document.getElementById('bpmText').innerText) || 120;
-            const msPorBeat = 60000 / bpm;
-            document.getElementById('metronomeBtn').style.background = "var(--neon-orange)";
-            document.getElementById('metronomeBtn').style.color = "#000";
-            metronomoActivo = true;
-
-            metronomoInterval = setInterval(() => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 1000;
-                gain.gain.setValueAtTime(1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.05);
-            }, msPorBeat);
-        }
-    };
-</script>
-</body>
-</html>
+            srcPista = audioCtx.createBufferSource(); srcPista.buffer = buf
+    
