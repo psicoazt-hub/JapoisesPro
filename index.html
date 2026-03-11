@@ -2,20 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Japoises Pro</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Japoises Pro">
-    <link rel="apple-touch-icon" href="https://i.imgur.com/vHq0uS9.png">
+    <link rel="apple-touch-icon" href="./icono.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <script>
-        // Inyector PWA nativo unificado
         const manifest = {
             name: "Japoises Pro", short_name: "Japoises", display: "standalone",
             start_url: location.href, background_color: "#050505", theme_color: "#00f2ff",
-            icons: [{src: "https://i.imgur.com/vHq0uS9.png", sizes: "512x512", type: "image/png", purpose: "any maskable"}]
+            icons: [{src: "./icono.png", sizes: "512x512", type: "image/png", purpose: "any maskable"}]
         };
         const blobMan = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blobMan)}">`);
@@ -25,41 +26,41 @@
 
     <style>
         :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --neon-red: #ff003c; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
-        .header { background: #111; padding: 10px; text-align: center; border-bottom: 2px solid var(--neon-blue); }
-        .logo-main { width: 80px; filter: drop-shadow(0 0 10px var(--neon-blue)); }
-        .panel { background: #111; margin: 10px; border-radius: 12px; border: 1px solid #222; padding: 12px; text-align: center; }
-        .loader-group { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-        .btn-load { flex: 1; background: #1a1a1a; border: 1px solid var(--neon-orange); color: var(--neon-orange); padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 120px; font-size: 18px; }
+        .header { background: #111; padding: 20px; text-align: center; border-bottom: 3px solid var(--neon-blue); }
+        .logo-main { width: 120px; filter: drop-shadow(0 0 15px var(--neon-blue)); }
+        .panel { background: #111; margin: 20px; border-radius: 16px; border: 2px solid #222; padding: 20px; text-align: center; }
+        .loader-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .btn-load { background: #1a1a1a; border: 2px solid var(--neon-orange); color: var(--neon-orange); padding: 20px; border-radius: 12px; font-weight: bold; font-size: 18px; }
         .btn-load.ready { background: var(--neon-orange); color: #000; }
         
-        .progress-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-container { width: 100%; background: #222; height: 16px; border-radius: 8px; margin: 20px 0; overflow: hidden; }
         .progress-bar { width: 0%; background: var(--neon-blue); height: 100%; transition: width 0.1s linear; }
-        .time-display { font-size: 12px; color: #888; display: flex; justify-content: space-between; font-weight: bold; }
+        .time-display { font-size: 16px; color: #888; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
         
-        .chord-ticker { display: flex; gap: 8px; padding: 10px; background: #000; border-radius: 8px; margin: 10px 0; justify-content: center; align-items: center;}
-        .chord-unit { width: 50px; height: 50px; line-height: 50px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 18px; border-radius: 8px; border: 1px solid var(--neon-blue); }
+        .chord-ticker { display: flex; gap: 12px; padding: 20px; background: #000; border-radius: 12px; margin: 20px 0; justify-content: center; align-items: center;}
+        .chord-unit { width: 70px; height: 70px; line-height: 70px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 28px; border-radius: 12px; border: 2px solid var(--neon-blue); }
         
-        input[type=range] { width: 100%; -webkit-appearance: none; height: 8px; background: #222; border-radius: 4px; outline: none; border: 1px solid #333; margin: 10px 0; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 10px var(--neon-blue); }
+        input[type=range] { width: 100%; -webkit-appearance: none; height: 16px; background: #222; border-radius: 8px; outline: none; border: 2px solid #333; margin: 20px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 40px; height: 40px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 15px var(--neon-blue); }
         
-        .mixer { display: flex; justify-content: space-between; gap: 5px; margin-top: 10px; }
-        .voice-strip { background: #0a0a0a; padding: 10px 2px; border-radius: 8px; width: 24%; text-align: center; border: 1px solid #222; }
-        .v-label { font-size: 9px; margin-bottom: 8px; color: #888; font-weight: bold; }
-        .note-name { font-size: 14px; font-weight: bold; color: var(--neon-blue); margin-top: 8px; }
-        .vol-slider { -webkit-appearance: slider-vertical; width: 15px; height: 80px; background: #222; }
+        .mixer { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        .voice-strip { background: #0a0a0a; padding: 15px 5px; border-radius: 12px; width: 24%; text-align: center; border: 2px solid #222; }
+        .v-label { font-size: 12px; margin-bottom: 15px; color: #888; font-weight: bold; }
+        .note-name { font-size: 20px; font-weight: bold; color: var(--neon-blue); margin-top: 15px; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 30px; height: 120px; background: #222; }
         
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #222; z-index: 100; align-items: center; }
-        .btn-action { background: #1a1a1a; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px 12px; border-radius: 12px; font-weight: bold; font-size: 11px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 3px solid #222; z-index: 100; align-items: center; }
+        .btn-action { background: #1a1a1a; border: 2px solid var(--neon-blue); color: var(--neon-blue); padding: 15px 20px; border-radius: 16px; font-weight: bold; font-size: 16px; }
         .btn-rec { border-color: var(--neon-red); color: var(--neon-red); }
-        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; margin-top: -20px; box-shadow: 0 0 15px rgba(0,242,255,0.5); }
+        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 32px; margin-top: -40px; box-shadow: 0 0 25px rgba(0,242,255,0.5); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="https://i.imgur.com/vHq0uS9.png" class="logo-main" alt="Logo">
-    <div style="font-size: 16px; font-weight: 900; letter-spacing: 3px; color: var(--neon-blue);">JAPOISES PRO</div>
+    <img src="./icono.png" class="logo-main" alt="Logo">
+    <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: var(--neon-blue); margin-top: 10px;">JAPOISES PRO</div>
 </div>
 
 <div class="panel">
@@ -77,7 +78,7 @@
 </div>
 
 <div class="panel">
-    <div class="time-display"><span>GRAVE (-12)</span><span>OCTAVADOR (MANTIENE VELOCIDAD)</span><span>AGUDO (+12)</span></div>
+    <div class="time-display"><span>GRAVE (-12)</span><span style="font-size: 12px;">PITCH SIN AFECTAR VELOCIDAD</span><span>AGUDO (+12)</span></div>
     <input type="range" id="masterPitch" min="-12" max="12" value="0">
     
     <div class="chord-ticker">
@@ -126,37 +127,36 @@
         "La": ["La", "Do#", "Mi"], "La#": ["La#", "Re", "Fa"], "Si": ["Si", "Re#", "Fa#"]
     };
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let bufPista, bufVoz;
-    let srcPista, srcV1, srcV2, srcV3;
-    let gainPista, gainV1, gainV2, gainV3;
-    let shifterPista, shifterV1, shifterV2, shifterV3;
+    let bufferPista = null, bufferVoz = null;
+    let playerPista, playerV1, playerV2, playerV3;
     
-    let isPlaying = false;
+    // Nodos de control Tone.js
+    const shiftPista = new Tone.PitchShift(0).toDestination();
+    const shiftV1 = new Tone.PitchShift(0).toDestination();
+    const shiftV2 = new Tone.PitchShift(4).toDestination(); // 2da voz base
+    const shiftV3 = new Tone.PitchShift(7).toDestination(); // 3ra voz base
+    
+    const volNodePista = new Tone.Volume(0).connect(shiftPista);
+    const volNodeV1 = new Tone.Volume(0).connect(shiftV1);
+    const volNodeV2 = new Tone.Volume(-2).connect(shiftV2);
+    const volNodeV3 = new Tone.Volume(-2).connect(shiftV3);
+
+    let isPlaying = false, duration = 0, currentBPM = 120, animFrame;
     let startTime = 0, pausedAt = 0;
-    let duration = 0;
-    let currentBPM = 120;
-    let animFrame;
+    
+    let destNode, mediaRecorder, chunks = [], isRecording = false;
 
-    let mediaRecorder, destNode, chunks = [];
-    let isRecording = false;
-
-    // Motor Granular (Pitch Shift sin alterar tiempo) - Algoritmo de doble oscilador superpuesto
-    function createJungle(ctx) {
-        let node = ctx.createGain();
-        // Implementación simplificada para mantener fluidez en móviles
-        // Por estabilidad de hardware en Oppo, el ruteo se hace vía nodos nativos simulando Phase Vocoder
-        node.pitchRatio = 1.0;
-        return node; 
-    }
+    // Configurar grabadora en el destino final
+    Tone.Destination.ready.then(() => {
+        destNode = Tone.context.createMediaStreamDestination();
+        Tone.Destination.connect(destNode);
+    });
 
     function formatTime(s) {
-        let min = Math.floor(s / 60);
-        let sec = Math.floor(s % 60);
+        let min = Math.floor(s / 60); let sec = Math.floor(s % 60);
         return min + ":" + (sec < 10 ? "0" : "") + sec;
     }
 
-    // Escáner de picos para Auto-BPM
     function detectBPM(buffer) {
         const data = buffer.getChannelData(0);
         let peaks = [], threshold = 0.8;
@@ -169,69 +169,147 @@
         return (bpmCalc > 60 && bpmCalc < 200) ? bpmCalc : 120;
     }
 
-    async function loadAudio(fileElement, btnElement, type) {
+    function loadAudio(fileElement, btnElement, type) {
         const file = fileElement.files[0];
         if (!file) return;
-        btnElement.innerText = "CARGANDO...";
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = await audioCtx.decodeAudioData(arrayBuffer);
+        btnElement.innerText = "CARGANDO MOTOR...";
+        const url = URL.createObjectURL(file);
         
-        if (type === 'pista') {
-            bufPista = buffer;
-            duration = buffer.duration;
-            document.getElementById('totalTime').innerText = formatTime(duration);
-            currentBPM = detectBPM(buffer);
-            document.getElementById('bpmText').innerText = currentBPM;
-        } else {
-            bufVoz = buffer;
-        }
-        btnElement.classList.add('ready');
-        btnElement.innerText = type.toUpperCase() + " LISTA";
+        const newBuffer = new Tone.ToneAudioBuffer(url, () => {
+            if (type === 'pista') {
+                bufferPista = newBuffer;
+                duration = bufferPista.duration;
+                document.getElementById('totalTime').innerText = formatTime(duration);
+                currentBPM = detectBPM(bufferPista);
+                document.getElementById('bpmText').innerText = currentBPM;
+            } else {
+                bufferVoz = newBuffer;
+            }
+            btnElement.classList.add('ready');
+            btnElement.innerText = type.toUpperCase() + " LISTA";
+        });
     }
 
     document.getElementById('filePista').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); });
     document.getElementById('fileVoz').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); });
 
-    // Ruteo de consola principal
-    destNode = audioCtx.createMediaStreamDestination();
-    gainPista = audioCtx.createGain(); gainV1 = audioCtx.createGain(); 
-    gainV2 = audioCtx.createGain(); gainV3 = audioCtx.createGain();
-    
-    [gainPista, gainV1, gainV2, gainV3].forEach(g => {
-        g.connect(audioCtx.destination);
-        g.connect(destNode); // Ruteo dual para el grabador
-    });
-
-    document.getElementById('volPista').oninput = e => gainPista.gain.value = e.target.value;
-    document.getElementById('volV1').oninput = e => gainV1.gain.value = e.target.value;
-    document.getElementById('volV2').oninput = e => gainV2.gain.value = e.target.value;
-    document.getElementById('volV3').oninput = e => gainV3.gain.value = e.target.value;
+    document.getElementById('volPista').oninput = e => volNodePista.volume.value = Tone.gainToDb(e.target.value);
+    document.getElementById('volV1').oninput = e => volNodeV1.volume.value = Tone.gainToDb(e.target.value);
+    document.getElementById('volV2').oninput = e => volNodeV2.volume.value = Tone.gainToDb(e.target.value);
+    document.getElementById('volV3').oninput = e => volNodeV3.volume.value = Tone.gainToDb(e.target.value);
 
     function updateVisuals() {
         if (!isPlaying) return;
-        let elapsed = audioCtx.currentTime - startTime + pausedAt;
+        let elapsed = Tone.now() - startTime + pausedAt;
         if (elapsed >= duration) { stopAudio(); return; }
-        
         document.getElementById('currentTime').innerText = formatTime(elapsed);
         document.getElementById('progBar').style.width = ((elapsed / duration) * 100) + "%";
         animFrame = requestAnimationFrame(updateVisuals);
     }
 
     function stopAudio() {
-        if (srcPista) srcPista.stop();
-        if (srcV1) srcV1.stop(); if (srcV2) srcV2.stop(); if (srcV3) srcV3.stop();
+        if (playerPista) playerPista.stop();
+        if (playerV1) playerV1.stop(); if (playerV2) playerV2.stop(); if (playerV3) playerV3.stop();
         document.getElementById('playBtn').innerText = "▶";
         cancelAnimationFrame(animFrame);
-        pausedAt = audioCtx.currentTime - startTime + pausedAt;
+        pausedAt = Tone.now() - startTime + pausedAt;
         isPlaying = false;
     }
 
-    document.getElementById('playBtn').onclick = () => {
-        if (!bufPista) return alert("Falta cargar la Pista Instrumental, carnal.");
+    document.getElementById('playBtn').onclick = async () => {
+        if (!bufferPista) return alert("Falta cargar la Pista Instrumental, carnal.");
+        await Tone.start();
+        
         if (isPlaying) {
             stopAudio();
         } else {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            playerPista = new Tone.Player(bufferPista).connect(volNodePista);
+            if (bufferVoz) {
+                playerV1 = new Tone.Player(bufferVoz).connect(volNodeV1);
+                playerV2 = new Tone.Player(bufferVoz).connect(volNodeV2);
+                playerV3 = new Tone.Player(bufferVoz).connect(volNodeV3);
+                playerV1.start(0, pausedAt); playerV2.start(0, pausedAt); playerV3.start(0, pausedAt);
+            }
+            playerPista.start(0, pausedAt);
             
-            srcPista = audioCtx.createBufferSource(); srcPista.buffer = buf
-    
+            startTime = Tone.now();
+            isPlaying = true;
+            document.getElementById('playBtn').innerText = "⏸";
+            updateVisuals();
+        }
+    };
+
+    const pitchSlider = document.getElementById('masterPitch');
+    pitchSlider.addEventListener('input', () => {
+        const val = parseInt(pitchSlider.value);
+        const idx = (val >= 0) ? val % 12 : (12 + (val % 12)) % 12;
+        const notaTonica = notas[idx];
+        
+        document.getElementById('tonalidad').innerText = `TONO: ${notaTonica.toUpperCase()}`;
+        document.getElementById('currChord').innerText = notaTonica;
+        const t = triadas[notaTonica];
+        document.getElementById('n1').innerText = t[0];
+        document.getElementById('n2').innerText = t[1];
+        document.getElementById('n3').innerText = t[2];
+        
+        shiftPista.pitch = val;
+        shiftV1.pitch = val;
+        shiftV2.pitch = val + 4; // Ajuste para 2da voz
+        shiftV3.pitch = val + 7; // Ajuste para 3ra voz
+    });
+
+    document.getElementById('recordBtn').onclick = () => {
+        if (!isRecording) {
+            chunks = [];
+            mediaRecorder = new MediaRecorder(destNode.stream);
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'JapoisesPro_ToneMix.ogg';
+                a.click();
+            };
+            mediaRecorder.start();
+            document.getElementById('recordBtn').style.background = "var(--neon-red)";
+            document.getElementById('recordBtn').style.color = "#fff";
+            document.getElementById('recordBtn').innerText = "PARAR REC";
+            isRecording = true;
+        } else {
+            mediaRecorder.stop();
+            document.getElementById('recordBtn').style.background = "#1a1a1a";
+            document.getElementById('recordBtn').style.color = "var(--neon-red)";
+            document.getElementById('recordBtn').innerText = "GUARDAR MIX";
+            isRecording = false;
+        }
+    };
+
+    let metronomoInterval;
+    let metronomoActivo = false;
+    document.getElementById('metronomeBtn').onclick = () => {
+        if (metronomoActivo) {
+            clearInterval(metronomoInterval);
+            document.getElementById('metronomeBtn').style.background = "#1a1a1a";
+            document.getElementById('metronomeBtn').style.color = "var(--neon-blue)";
+            metronomoActivo = false;
+        } else {
+            const msPorBeat = 60000 / currentBPM;
+            document.getElementById('metronomeBtn').style.background = "var(--neon-orange)";
+            document.getElementById('metronomeBtn').style.color = "#000";
+            metronomoActivo = true;
+
+            metronomoInterval = setInterval(() => {
+                const osc = Tone.context.createOscillator();
+                const gain = Tone.context.createGain();
+                osc.connect(gain); gain.connect(Tone.context.destination); gain.connect(destNode);
+                osc.frequency.value = 1000;
+                gain.gain.setValueAtTime(0.8, Tone.context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, Tone.context.currentTime + 0.05);
+                osc.start(); osc.stop(Tone.context.currentTime + 0.05);
+            }, msPorBeat);
+        }
+    };
+</script>
+</body>
+</html>
+
