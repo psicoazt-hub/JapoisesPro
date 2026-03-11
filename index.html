@@ -2,61 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Japoises Pro</title>
-    
-    <link rel="apple-touch-icon" href="./icono.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
-    <script src="./tone.js" onerror="this.src='https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js'"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
-        :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --bg: #050505; }
+        :root { --blue: #00f2ff; --orange: #ff8c00; --red: #ff003c; --bg: #050505; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 120px; }
-        .header { background: #111; padding: 15px; text-align: center; border-bottom: 3px solid var(--neon-blue); }
-        .panel { background: #111; margin: 15px; border-radius: 12px; border: 2px solid #222; padding: 20px; text-align: center; }
-        .btn-load { background: #1a1a1a; border: 2px solid var(--neon-orange); color: var(--neon-orange); padding: 20px; border-radius: 10px; font-weight: bold; font-size: 18px; width: 100%; margin-bottom: 10px; }
-        .btn-load.ready { background: var(--neon-orange); color: #000; border-color: #fff; }
-        .chord-box { width: 90px; height: 90px; line-height: 90px; background: #000; color: var(--neon-blue); font-weight: bold; font-size: 35px; border-radius: 15px; border: 3px solid var(--neon-blue); margin: 15px auto; box-shadow: 0 0 15px var(--neon-blue); }
-        .mixer { display: flex; justify-content: space-around; margin-top: 20px; }
-        .v-strip { width: 23%; text-align: center; background: #0a0a0a; padding: 10px 0; border-radius: 8px; border: 1px solid #222; }
-        .vol-slider { -webkit-appearance: slider-vertical; width: 40px; height: 120px; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 2px solid #222; z-index: 1000; }
-        .btn-play { background: var(--neon-blue); border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 35px; margin-top: -45px; box-shadow: 0 0 25px var(--neon-blue); color: #000; }
+        .panel { background: #111; margin: 10px; border-radius: 12px; border: 1px solid #333; padding: 15px; text-align: center; }
+        .btn-load { background: #1a1a1a; border: 2px solid var(--orange); color: var(--orange); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 10px; font-weight: bold; }
+        .btn-load.ready { background: var(--orange); color: #000; }
+        .chord-unit { width: 70px; height: 70px; line-height: 70px; background: #000; color: var(--blue); font-weight: bold; font-size: 28px; border-radius: 10px; border: 2px solid var(--blue); margin: 10px auto; }
+        .mixer { display: flex; justify-content: space-between; }
+        .v-strip { width: 23%; text-align: center; font-size: 10px; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 25px; height: 90px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; align-items: center; }
+        .btn-play { background: var(--blue); border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; margin-top: -35px; box-shadow: 0 0 15px var(--blue); }
+        .btn-rec { background: none; border: 2px solid var(--red); color: var(--red); padding: 10px; border-radius: 8px; font-weight: bold; }
+        .btn-rec.recording { background: var(--red); color: #fff; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div style="font-size: 22px; font-weight: 900; color: var(--neon-blue);">JAPOISES PRO</div>
-    <button onclick="location.reload(true)" style="background:none; color:#444; border:1px solid #333; font-size:10px; margin-top:5px;">RECARGAR MOTOR</button>
+<div class="panel">
+    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA</button>
+    <button class="btn-load" id="btnV" onclick="document.getElementById('fV').click()">2. CARGAR VOZ</button>
+    <div style="font-size: 12px; color: var(--orange);">TONO: <span id="txtT">DO</span></div>
 </div>
 
 <div class="panel">
-    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA (M4A/MP3)</button>
-    <button class="btn-load" id="btnV" onclick="document.getElementById('fV').click()">2. CARGAR VOZ (ACAPELA)</button>
-    <div style="margin-top:10px; color: var(--neon-orange); font-weight:bold;">
-        TONO ACTUAL: <span id="txtTono">DO</span>
-    </div>
-</div>
-
-<div class="panel">
-    <div style="font-size:12px; color:#888; margin-bottom:10px;">DESLIZA PARA CAMBIAR EL TONO</div>
-    <input type="range" id="pSlider" min="-12" max="12" value="0" style="width:100%; height:30px;">
-    <div class="chord-box" id="cBox">DO</div>
-    
+    <input type="range" id="pSlide" min="-12" max="12" value="0" style="width:100%">
+    <div class="chord-unit" id="cBox">DO</div>
     <div class="mixer">
-        <div class="v-strip">PISTA<br><input type="range" class="vol-slider" id="volP" min="0" max="2" step="0.1" value="1"></div>
-        <div class="v-strip">1RA<br><input type="range" class="vol-slider" id="vol1" min="0" max="2" step="0.1" value="1"></div>
-        <div class="v-strip">2DA<br><input type="range" class="vol-slider" id="vol2" min="0" max="2" step="0.1" value="0.7"></div>
-        <div class="v-strip">3RA<br><input type="range" class="vol-slider" id="vol3" min="0" max="2" step="0.1" value="0.7"></div>
+        <div class="v-strip">PISTA<br><input type="range" class="vol-slider" id="vP" min="0" max="2" step="0.1" value="1"></div>
+        <div class="v-strip">VOZ 1<br><input type="range" class="vol-slider" id="v1" min="0" max="2" step="0.1" value="1"></div>
+        <div class="v-strip">VOZ 2<br><input type="range" class="vol-slider" id="v2" min="0" max="2" step="0.1" value="0.7"></div>
+        <div class="v-strip">VOZ 3<br><input type="range" class="vol-slider" id="v3" min="0" max="2" step="0.1" value="0.7"></div>
     </div>
 </div>
 
 <div class="nav-bar">
-    <div style="width:80px"></div>
+    <button class="btn-rec" id="btnRec">REC MIX</button>
     <button class="btn-play" id="btnPlay">▶</button>
-    <div style="width:80px"></div>
+    <button id="btnClic" style="background:none; border:1px solid var(--blue); color:var(--blue); padding:10px; border-radius:8px;">CLIC</button>
 </div>
 
 <input type="file" id="fP" style="display:none" accept="audio/*">
@@ -64,94 +52,91 @@
 
 <script>
     const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
-    let bufP, bufV, plyP, ply1, ply2, ply3, isP = false;
-    let sP, s1, s2, s3, vP, v1, v2, v3;
+    let bufP, bufV, pP, p1, p2, p3, isP = false, isR = false;
+    let sP, s1, s2, s3, volP, vol1, vol2, vol3, dest, rec;
+    let clicLoop;
 
-    // Inicialización de la consola de mezcla
-    function armarConsola() {
+    function init() {
         if(sP) return;
+        dest = Tone.context.createMediaStreamDestination();
         sP = new Tone.PitchShift(0).toDestination();
         s1 = new Tone.PitchShift(0).toDestination();
         s2 = new Tone.PitchShift(4).toDestination();
         s3 = new Tone.PitchShift(7).toDestination();
-        vP = new Tone.Volume(0).connect(sP);
-        v1 = new Tone.Volume(0).connect(s1);
-        v2 = new Tone.Volume(-5).connect(s2);
-        v3 = new Tone.Volume(-5).connect(s3);
+        sP.connect(dest); s1.connect(dest); s2.connect(dest); s3.connect(dest);
+        volP = new Tone.Volume(0).connect(sP);
+        vol1 = new Tone.Volume(0).connect(s1);
+        vol2 = new Tone.Volume(-5).connect(s2);
+        vol3 = new Tone.Volume(-5).connect(s3);
+        rec = new MediaRecorder(dest.stream);
+        let chunks = [];
+        rec.ondataavailable = e => chunks.push(e.data);
+        rec.onstop = () => {
+            const blob = new Blob(chunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'mi_mezcla.webm'; a.click();
+            chunks = [];
+        };
     }
 
-    async function cargarArchivo(input, boton, esPista) {
-        const archivo = input.files[0];
-        if(!archivo) return;
-        
-        boton.innerText = "PROCESANDO...";
-        boton.style.borderColor = "#00f2ff";
-
-        try {
-            const data = await archivo.arrayBuffer();
-            const decoded = await Tone.context.decodeAudioData(data);
-            const tBuffer = new Tone.ToneAudioBuffer(decoded);
-            
-            if(esPista) bufP = tBuffer;
-            else bufV = tBuffer;
-
-            boton.innerText = "¡LISTO!";
-            boton.classList.add('ready');
-        } catch (error) {
-            console.error(error);
-            boton.innerText = "ERROR AL CARGAR";
-            alert("El archivo no se pudo decodificar. Intenta con otro M4A o MP3.");
-        }
+    async function load(f, b, t) {
+        b.innerText = "ESPERA...";
+        const data = await f.arrayBuffer();
+        const dec = await Tone.context.decodeAudioData(data);
+        if(t==='p') bufP = new Tone.ToneAudioBuffer(dec);
+        else bufV = new Tone.ToneAudioBuffer(dec);
+        b.innerText = "LISTO"; b.classList.add('ready');
     }
 
-    document.getElementById('fP').onchange = e => cargarArchivo(e.target, document.getElementById('btnP'), true);
-    document.getElementById('fV').onchange = e => cargarArchivo(e.target, document.getElementById('btnV'), false);
+    document.getElementById('fP').onchange = e => load(e.target.files[0], document.getElementById('btnP'), 'p');
+    document.getElementById('fV').onchange = e => load(e.target.files[0], document.getElementById('btnV'), 'v');
 
     document.getElementById('btnPlay').onclick = async () => {
-        if(!bufP) return alert("Primero carga la Pista 1.");
-        
-        await Tone.start();
-        armarConsola();
-
+        if(!bufP) return;
+        await Tone.start(); init();
         if(isP) {
-            if(plyP) plyP.stop(); if(ply1) ply1.stop();
-            if(ply2) ply2.stop(); if(ply3) ply3.stop();
-            isP = false;
-            document.getElementById('btnPlay').innerText = "▶";
+            if(pP) pP.stop(); if(p1) p1.stop();
+            isP = false; document.getElementById('btnPlay').innerText = "▶";
         } else {
-            plyP = new Tone.Player(bufP).connect(vP);
+            pP = new Tone.Player(bufP).connect(volP);
             if(bufV) {
-                ply1 = new Tone.Player(bufV).connect(v1);
-                ply2 = new Tone.Player(bufV).connect(v2);
-                ply3 = new Tone.Player(bufV).connect(v3);
-                ply1.start(); ply2.start(); ply3.start();
+                p1 = new Tone.Player(bufV).connect(vol1);
+                p2 = new Tone.Player(bufV).connect(vol2);
+                p3 = new Tone.Player(bufV).connect(vol3);
+                p1.start(); p2.start(); p3.start();
             }
-            plyP.start();
-            isP = true;
-            document.getElementById('btnPlay').innerText = "⏸";
+            pP.start(); isP = true; document.getElementById('btnPlay').innerText = "⏸";
         }
     };
 
-    // Control de volúmenes en tiempo real
-    document.getElementById('volP').oninput = e => { if(vP) vP.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('vol1').oninput = e => { if(v1) v1.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('vol2').oninput = e => { if(v2) v2.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('vol3').oninput = e => { if(v3) v3.volume.value = Tone.gainToDb(e.target.value); };
-
-    // Control de tono
-    document.getElementById('pSlider').oninput = function() {
-        let val = parseInt(this.value);
-        let n = notas[(val >= 0) ? val % 12 : (12 + (val % 12)) % 12];
-        document.getElementById('txtTono').innerText = n.toUpperCase();
-        document.getElementById('cBox').innerText = n.toUpperCase();
-        if(sP) {
-            sP.pitch = val;
-            s1.pitch = val;
-            s2.pitch = val + 4;
-            s3.pitch = val + 7;
+    document.getElementById('btnRec').onclick = () => {
+        if(!isP) return alert("Dale Play primero");
+        if(!isR) {
+            rec.start(); isR = true;
+            document.getElementById('btnRec').classList.add('recording');
+            document.getElementById('btnRec').innerText = "DETENER";
+        } else {
+            rec.stop(); isR = false;
+            document.getElementById('btnRec').classList.remove('recording');
+            document.getElementById('btnRec').innerText = "REC MIX";
         }
+    };
+
+    document.getElementById('btnClic').onclick = () => {
+        if(clicLoop) { Tone.Transport.stop(); clicLoop = null; return; }
+        const click = new Tone.Oscillator("C6", "sine").toDestination();
+        clicLoop = new Tone.Loop(t => click.start(t).stop(t + 0.05), "4n").start(0);
+        Tone.Transport.bpm.value = 120; Tone.Transport.start();
+    };
+
+    document.getElementById('pSlide').oninput = function() {
+        let v = parseInt(this.value);
+        let n = notas[(v >= 0) ? v % 12 : (12 + (v % 12)) % 12];
+        document.getElementById('txtT').innerText = n.toUpperCase();
+        document.getElementById('cBox').innerText = n.toUpperCase();
+        if(sP) { sP.pitch = v; s1.pitch = v; s2.pitch = v+4; s3.pitch = v+7; }
     };
 </script>
 </body>
 </html>
-
