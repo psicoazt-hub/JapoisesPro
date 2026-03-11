@@ -9,29 +9,29 @@
         :root { --blue: #00f2ff; --orange: #ff8c00; --red: #ff003c; --bg: #050505; }
         body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 120px; text-align: center; }
         .panel { background: #111; margin: 10px; border-radius: 12px; border: 2px solid #333; padding: 20px; }
-        .btn-load { background: #1a1a1a; border: 2px solid var(--orange); color: var(--orange); padding: 18px; border-radius: 10px; width: 100%; margin-bottom: 10px; font-weight: bold; }
+        .btn-load { background: #1a1a1a; border: 2px solid var(--orange); color: var(--orange); padding: 20px; border-radius: 10px; width: 100%; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
         .btn-load.ready { background: var(--orange); color: #000; }
-        .chord-unit { width: 90px; height: 90px; line-height: 90px; background: #000; color: var(--blue); font-weight: bold; font-size: 35px; border-radius: 15px; border: 3px solid var(--blue); margin: 15px auto; box-shadow: 0 0 15px var(--blue); }
-        .mixer { display: flex; justify-content: space-around; margin-top: 20px; }
-        .v-strip { width: 23%; text-align: center; background: #0a0a0a; padding: 10px 0; border-radius: 8px; }
-        .vol-slider { -webkit-appearance: slider-vertical; width: 30px; height: 110px; }
+        .chord-unit { width: 100px; height: 100px; line-height: 100px; background: #000; color: var(--blue); font-weight: bold; font-size: 40px; border-radius: 20px; border: 3px solid var(--blue); margin: 15px auto; box-shadow: 0 0 20px var(--blue); }
+        .mixer { display: flex; justify-content: space-around; margin-top: 25px; }
+        .v-strip { width: 23%; text-align: center; background: #0a0a0a; padding: 10px 0; border-radius: 8px; border: 1px solid #222; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 35px; height: 120px; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 3px solid #333; align-items: center; }
-        .btn-play { background: var(--blue); border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 35px; margin-top: -45px; color: #000; }
+        .btn-play { background: var(--blue); border: none; width: 85px; height: 85px; border-radius: 50%; font-size: 35px; margin-top: -45px; color: #000; box-shadow: 0 0 25px var(--blue); }
     </style>
 </head>
 <body>
 
 <div class="panel">
-    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA</button>
+    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA (ESCANEANDO TÓNICA)</button>
     <button class="btn-load" id="btnV" onclick="document.getElementById('fV').click()">2. CARGAR VOZ</button>
-    <div style="font-size: 14px; color: var(--orange); margin-top:10px; font-weight:bold;">
-        BASE: <span id="info">SOL</span>
+    <div style="font-size: 16px; color: var(--orange); font-weight: bold; margin-top: 5px;">
+        TONALIDAD REAL: <span id="info">--</span>
     </div>
 </div>
 
 <div class="panel">
-    <input type="range" id="pSlide" min="-12" max="12" value="0" style="width:100%; height:40px;">
-    <div class="chord-unit" id="cBox">SOL</div>
+    <input type="range" id="pSlide" min="-12" max="12" value="0" style="width:100%; height:45px;">
+    <div class="chord-unit" id="cBox">--</div>
     
     <div class="mixer">
         <div class="v-strip">PISTA<br><input type="range" class="vol-slider" id="vP" min="0" max="2" step="0.1" value="1"></div>
@@ -42,7 +42,7 @@
 </div>
 
 <div class="nav-bar">
-    <button id="btnRec" style="color:var(--red); border:2px solid var(--red); background:none; padding:15px; border-radius:10px; font-weight:bold;">GRABAR</button>
+    <button id="btnRec" style="color:var(--red); border:2px solid var(--red); background:none; padding:15px; border-radius:12px; font-weight:bold;">GRABAR MIX</button>
     <button class="btn-play" id="btnPlay">▶</button>
     <div style="width:80px"></div>
 </div>
@@ -51,44 +51,73 @@
 <input type="file" id="fV" style="display:none" accept="audio/*">
 
 <script>
-    const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+    const notas = ["DO", "DO#", "RE", "RE#", "MI", "FA", "FA#", "SOL", "SOL#", "LA", "LA#", "SI"];
     let bufP, bufV, plyP, ply1, ply2, ply3, isP = false, isR = false;
     let sP, s1, s2, s3, vP, v1, v2, v3, dest, rec;
-    let offsetTono = 7; // Iniciamos en SOL
+    let baseIdx = 0;
 
     function setupAudio() {
         if(sP) return;
         dest = Tone.context.createMediaStreamDestination();
-        
-        // Configuramos el PitchShift pero NO lo activamos si el tono es 0
         sP = new Tone.PitchShift(0).toDestination();
         s1 = new Tone.PitchShift(0).toDestination();
         s2 = new Tone.PitchShift(4).toDestination();
-        s3 = new Tone.PitchShift(7).toDestination();
-        
+                s3 = new Tone.PitchShift(7).toDestination();
         [sP, s1, s2, s3].forEach(s => s.connect(dest));
         vP = new Tone.Volume(0).connect(sP);
         v1 = new Tone.Volume(0).connect(s1);
         v2 = new Tone.Volume(-5).connect(s2);
         v3 = new Tone.Volume(-5).connect(s3);
-        
         rec = new MediaRecorder(dest.stream);
         let chunks = [];
         rec.ondataavailable = e => chunks.push(e.data);
         rec.onstop = () => {
             const blob = new Blob(chunks, { type: 'audio/webm' });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob); a.download = 'mix_japoises.webm'; a.click();
+            a.href = URL.createObjectURL(blob); a.download = 'japo_mix_final.webm'; a.click();
         };
     }
 
+    // Escaneo profundo de toda la rola para encontrar la tónica
+    async function escaneoProfundo(buffer) {
+        const data = buffer.getChannelData(0);
+        const total = data.length;
+        const step = Math.floor(total / 10); // Escaneamos 10 puntos de toda la rola
+        let freqCounts = new Array(12).fill(0);
+
+        for (let i = 0; i < total; i += step) {
+            // Analizamos pequeños bloques de 4096 muestras
+            const chunk = data.slice(i, i + 4096);
+            let picos = 0;
+            for(let j=1; j<chunk.length; j++) if(chunk[j] > 0 && chunk[j-1] <= 0) picos++;
+            let freq = picos * (buffer.sampleRate / 4096);
+            
+            // Mapeo rústico de frecuencia a nota
+            let n = Math.round(12 * Math.log2(freq / 440)) + 9;
+            if(!isNaN(n)) freqCounts[Math.abs(n % 12)]++;
+        }
+        
+        // La nota que más se repite en toda la canción es la tónica
+        baseIdx = freqCounts.indexOf(Math.max(...freqCounts));
+        
+        // Ajuste manual por si el escaneo da notas raras por distorsión
+        if(baseIdx > 11) baseIdx = 7; 
+
+        document.getElementById('info').innerText = notas[baseIdx];
+        document.getElementById('cBox').innerText = notas[baseIdx];
+    }
+
     async function load(f, b, type) {
-        b.innerText = "ESPERA...";
+        b.innerText = "ESCANEANDO ROLA...";
         const data = await f.arrayBuffer();
         const dec = await Tone.context.decodeAudioData(data);
-        if(type==='p') bufP = new Tone.ToneAudioBuffer(dec);
-        else bufV = new Tone.ToneAudioBuffer(dec);
-        b.innerText = "OK"; b.classList.add('ready');
+        if(type==='p') { 
+            bufP = new Tone.ToneAudioBuffer(dec); 
+            await escaneoProfundo(dec); 
+        } else { 
+            bufV = new Tone.ToneAudioBuffer(dec); 
+        }
+        b.innerText = "LISTO"; b.classList.add('ready');
     }
 
     document.getElementById('fP').onchange = e => load(e.target.files[0], document.getElementById('btnP'), 'p');
@@ -97,11 +126,8 @@
     document.getElementById('btnPlay').onclick = async () => {
         if(!bufP) return;
         await Tone.start(); setupAudio();
-        
         if(isP) {
-            // STOP TOTAL
-            if(plyP) plyP.stop(); if(ply1) ply1.stop();
-            if(ply2) ply2.stop(); if(ply3) ply3.stop();
+            [plyP, ply1, ply2, ply3].forEach(p => p && p.stop());
             isP = false; document.getElementById('btnPlay').innerText = "▶";
         } else {
             plyP = new Tone.Player(bufP).connect(vP);
@@ -116,22 +142,22 @@
     };
 
     document.getElementById('pSlide').oninput = function() {
-        let val = parseInt(this.value);
-        let idx = (offsetTono + val) % 12; if (idx < 0) idx += 12;
-        document.getElementById('cBox').innerText = notas[idx].toUpperCase();
-        
-        // Si el valor es 0, desactivamos el efecto para evitar sonido "macabro"
-        if(sP) {
-            sP.pitch = val; s1.pitch = val;
-            s2.pitch = val + 4; s3.pitch = val + 7;
+        let shift = parseInt(this.value);
+        let finalIdx = (baseIdx + shift) % 12;
+        if (finalIdx < 0) finalIdx += 12;
+        document.getElementById('cBox').innerText = notas[finalIdx];
+        if(sP) { 
+            sP.pitch = shift; s1.pitch = shift; 
+            s2.pitch = shift + 4; s3.pitch = shift + 7; 
         }
     };
 
     document.getElementById('btnRec').onclick = () => {
         if(!isP) return;
-        if(!isR) { rec.start(); isR = true; document.getElementById('btnRec').innerText = "FIN"; }
+        if(!isR) { rec.start(); isR = true; document.getElementById('btnRec').innerText = "STOP"; }
         else { rec.stop(); isR = false; document.getElementById('btnRec').innerText = "GRABAR"; }
     };
 </script>
 </body>
 </html>
+
