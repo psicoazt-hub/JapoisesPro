@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Japoises Pro">
     <link rel="apple-touch-icon" href="./icono.png">
 
-    <script src="./tone.js"></script>
+    <script src="tone.js"></script>
 
     <script>
         const manifest = {
@@ -20,8 +20,6 @@
         };
         const blobMan = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
         document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blobMan)}">`);
-        const blobSw = new Blob(["self.addEventListener('fetch', e => {});"], {type: 'application/javascript'});
-        if('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(blobSw));
     </script>
 
     <style>
@@ -33,34 +31,32 @@
         .loader-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .btn-load { background: #1a1a1a; border: 2px solid var(--neon-orange); color: var(--neon-orange); padding: 20px; border-radius: 12px; font-weight: bold; font-size: 18px; }
         .btn-load.ready { background: var(--neon-orange); color: #000; }
-        
         .progress-container { width: 100%; background: #222; height: 16px; border-radius: 8px; margin: 20px 0; overflow: hidden; }
         .progress-bar { width: 0%; background: var(--neon-blue); height: 100%; transition: width 0.1s linear; }
         .time-display { font-size: 16px; color: #888; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
-        
-        .chord-ticker { display: flex; gap: 12px; padding: 20px; background: #000; border-radius: 12px; margin: 20px 0; justify-content: center; align-items: center;}
-        .chord-unit { width: 70px; height: 70px; line-height: 70px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 28px; border-radius: 12px; border: 2px solid var(--neon-blue); }
-        
+        .chord-unit { width: 70px; height: 70px; line-height: 70px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 28px; border-radius: 12px; border: 2px solid var(--neon-blue); margin: 0 auto; }
         input[type=range] { width: 100%; -webkit-appearance: none; height: 16px; background: #222; border-radius: 8px; outline: none; border: 2px solid #333; margin: 20px 0; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 40px; height: 40px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 15px var(--neon-blue); }
-        
         .mixer { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
         .voice-strip { background: #0a0a0a; padding: 15px 5px; border-radius: 12px; width: 24%; text-align: center; border: 2px solid #222; }
         .v-label { font-size: 12px; margin-bottom: 15px; color: #888; font-weight: bold; }
         .note-name { font-size: 20px; font-weight: bold; color: var(--neon-blue); margin-top: 15px; }
         .vol-slider { -webkit-appearance: slider-vertical; width: 30px; height: 120px; background: #222; }
-        
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 3px solid #222; z-index: 100; align-items: center; }
         .btn-action { background: #1a1a1a; border: 2px solid var(--neon-blue); color: var(--neon-blue); padding: 15px 20px; border-radius: 16px; font-weight: bold; font-size: 16px; }
-        .btn-rec { border-color: var(--neon-red); color: var(--neon-red); }
         .btn-play { background: var(--neon-blue); color: #000; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 32px; margin-top: -40px; box-shadow: 0 0 25px rgba(0,242,255,0.5); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="./icono.png" class="logo-main" alt="Logo" onerror="this.style.display='none'">
+    <img src="./icono.png" class="logo-main" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/107/107198.png'">
     <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: var(--neon-blue); margin-top: 10px;">JAPOISES PRO</div>
+    <button onclick="location.reload(true)" style="background:none; border:1px solid #333; color:#555; font-size:10px; margin-top:5px;">LIMPIAR CACHÉ</button>
+</div>
+
+<div class="panel" id="statusPanel" style="background:#400; display:none; padding:10px; font-size:14px;">
+    ⚠️ El archivo tone.js no se cargó. Revisa que el nombre en GitHub esté todo en minúsculas.
 </div>
 
 <div class="panel">
@@ -68,7 +64,6 @@
         <button class="btn-load" id="btnLoadPista" onclick="document.getElementById('filePista').click()">1. PISTA (KARAOKE)</button>
         <button class="btn-load" id="btnLoadVoz" onclick="document.getElementById('fileVoz').click()">2. VOZ (ACAPELA)</button>
     </div>
-    
     <div class="progress-container"><div class="progress-bar" id="progBar"></div></div>
     <div class="time-display">
         <span id="currentTime">0:00</span>
@@ -80,37 +75,17 @@
 <div class="panel">
     <div class="time-display"><span>GRAVE (-12)</span><span style="font-size: 12px;">PITCH SIN AFECTAR VELOCIDAD</span><span>AGUDO (+12)</span></div>
     <input type="range" id="masterPitch" min="-12" max="12" value="0">
-    
-    <div class="chord-ticker">
-        <div class="chord-unit" id="currChord">--</div>
-    </div>
-
+    <div class="chord-unit" id="currChord">--</div>
     <div class="mixer">
-        <div class="voice-strip">
-            <div class="v-label">PISTA</div>
-            <input type="range" class="vol-slider" id="volPista" min="0" max="2" step="0.1" value="1">
-            <div class="note-name">-</div>
-        </div>
-        <div class="voice-strip">
-            <div class="v-label">1RA VOZ</div>
-            <input type="range" class="vol-slider" id="volV1" min="0" max="2" step="0.1" value="1">
-            <div class="note-name" id="n1">Do</div>
-        </div>
-        <div class="voice-strip">
-            <div class="v-label">2DA VOZ</div>
-            <input type="range" class="vol-slider" id="volV2" min="0" max="2" step="0.1" value="0.8">
-            <div class="note-name" id="n2">Mi</div>
-        </div>
-        <div class="voice-strip">
-            <div class="v-label">3RA VOZ</div>
-            <input type="range" class="vol-slider" id="volV3" min="0" max="2" step="0.1" value="0.8">
-            <div class="note-name" id="n3">Sol</div>
-        </div>
+        <div class="voice-strip"><div class="v-label">PISTA</div><input type="range" class="vol-slider" id="volPista" min="0" max="2" step="0.1" value="1"><div class="note-name">-</div></div>
+        <div class="voice-strip"><div class="v-label">1RA</div><input type="range" class="vol-slider" id="volV1" min="0" max="2" step="0.1" value="1"><div class="note-name" id="n1">Do</div></div>
+        <div class="voice-strip"><div class="v-label">2DA</div><input type="range" class="vol-slider" id="volV2" min="0" max="2" step="0.1" value="0.8"><div class="note-name" id="n2">Mi</div></div>
+        <div class="voice-strip"><div class="v-label">3RA</div><input type="range" class="vol-slider" id="volV3" min="0" max="2" step="0.1" value="0.8"><div class="note-name" id="n3">Sol</div></div>
     </div>
 </div>
 
 <div class="nav-bar">
-    <button class="btn-action btn-rec" id="recordBtn">GUARDAR MIX</button>
+    <button class="btn-action" id="recordBtn" style="color:var(--neon-red); border-color:var(--neon-red);">GUARDAR MIX</button>
     <button class="btn-play" id="playBtn">▶</button>
     <button class="btn-action" id="metronomeBtn">CLIC AUTO</button>
 </div>
@@ -120,219 +95,83 @@
 
 <script>
     const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
-    const triadas = {
-        "Do": ["Do", "Mi", "Sol"], "Do#": ["Do#", "Fa", "Sol#"], "Re": ["Re", "Fa#", "La"],
-        "Re#": ["Re#", "Sol", "La#"], "Mi": ["Mi", "Sol#", "Si"], "Fa": ["Fa", "La", "Do"],
-        "Fa#": ["Fa#", "La#", "Do#"], "Sol": ["Sol", "Si", "Re"], "Sol#": ["Sol#", "Do", "Re#"],
-        "La": ["La", "Do#", "Mi"], "La#": ["La#", "Re", "Fa"], "Si": ["Si", "Re#", "Fa#"]
-    };
+    const triadas = {"Do":["Do","Mi","Sol"],"Do#":["Do#","Fa","Sol#"],"Re":["Re","Fa#","La"],"Re#":["Re#","Sol","La#"],"Mi":["Mi","Sol#","Si"],"Fa":["Fa","La","Do"],"Fa#":["Fa#","La#","Do#"],"Sol":["Sol","Si","Re"],"Sol#":["Sol#","Do","Re#"],"La":["La","Do#","Mi"],"La#":["La#","Re","Fa"],"Si":["Si","Re#","Fa#"]};
 
-    let bufferPista = null, bufferVoz = null;
-    let playerPista, playerV1, playerV2, playerV3;
-    
-    // Si Tone no cargó porque falta el archivo, tira la alerta
-    window.onload = () => {
+    window.onerror = function() { document.getElementById('statusPanel').style.display = 'block'; };
+
+    let bufferPista, bufferVoz, playerPista, playerV1, playerV2, playerV3, isPlaying = false, duration = 0, currentBPM = 120, startTime = 0, pausedAt = 0;
+    let shiftPista, shiftV1, shiftV2, shiftV3, volNodePista, volNodeV1, volNodeV2, volNodeV3, destNode, mediaRecorder, chunks = [], isRecording = false;
+
+    // Solo arranca si Tone existe
+    setTimeout(() => {
         if (typeof Tone === 'undefined') {
-            alert("Falta el motor tone.js en tu GitHub. Las pistas no van a cargar hasta que lo subas.");
+            document.getElementById('statusPanel').style.display = 'block';
+            return;
         }
-    };
-
-    let destNode, mediaRecorder, chunks = [], isRecording = false;
-    let shiftPista, shiftV1, shiftV2, shiftV3;
-    let volNodePista, volNodeV1, volNodeV2, volNodeV3;
-    
-    if (typeof Tone !== 'undefined') {
+        
         shiftPista = new Tone.PitchShift(0).toDestination();
         shiftV1 = new Tone.PitchShift(0).toDestination();
         shiftV2 = new Tone.PitchShift(4).toDestination(); 
         shiftV3 = new Tone.PitchShift(7).toDestination(); 
-        
         volNodePista = new Tone.Volume(0).connect(shiftPista);
         volNodeV1 = new Tone.Volume(0).connect(shiftV1);
         volNodeV2 = new Tone.Volume(-2).connect(shiftV2);
         volNodeV3 = new Tone.Volume(-2).connect(shiftV3);
-
+        
         Tone.Destination.ready.then(() => {
             destNode = Tone.context.createMediaStreamDestination();
             Tone.Destination.connect(destNode);
         });
-    }
+    }, 500);
 
-    let isPlaying = false, duration = 0, currentBPM = 120, animFrame;
-    let startTime = 0, pausedAt = 0;
+    function formatTime(s) { let min = Math.floor(s/60), sec = Math.floor(s%60); return min+":"+(sec<10?"0":"")+sec; }
 
-    function formatTime(s) {
-        let min = Math.floor(s / 60); let sec = Math.floor(s % 60);
-        return min + ":" + (sec < 10 ? "0" : "") + sec;
-    }
-
-    function detectBPM(buffer) {
-        try {
-            const data = buffer.getChannelData(0);
-            let peaks = [], threshold = 0.8;
-            for(let i=0; i<data.length; i+=1000) { if(data[i] > threshold) peaks.push(i); }
-            if(peaks.length < 2) return 120;
-            let intervals = [];
-            for(let i=1; i<peaks.length; i++) { intervals.push(peaks[i] - peaks[i-1]); }
-            let avgDist = intervals.reduce((a,b)=>a+b,0) / intervals.length;
-            let bpmCalc = Math.round(60 / (avgDist / buffer.sampleRate));
-            return (bpmCalc > 60 && bpmCalc < 200) ? bpmCalc : 120;
-        } catch(e) { return 120; }
-    }
-
-    // Lector directo de bytes para evitar ahogar la memoria RAM
     async function loadAudio(fileElement, btnElement, type) {
-        if (typeof Tone === 'undefined') return alert("Falta tone.js");
-        const file = fileElement.files[0];
-        if (!file) return;
-        btnElement.innerText = "DECODIFICANDO...";
-        
+        if (typeof Tone === 'undefined') return;
+        const file = fileElement.files[0]; if (!file) return;
+        btnElement.innerText = "LEYENDO...";
         try {
-            const arrayBuffer = await file.arrayBuffer();
-            const audioBuffer = await Tone.context.decodeAudioData(arrayBuffer);
-            const newBuffer = new Tone.ToneAudioBuffer(audioBuffer);
-
+            const ab = await file.arrayBuffer();
+            const decoded = await Tone.context.decodeAudioData(ab);
+            const newBuf = new Tone.ToneAudioBuffer(decoded);
             if (type === 'pista') {
-                bufferPista = newBuffer;
-                duration = bufferPista.duration;
+                bufferPista = newBuf; duration = bufferPista.duration;
                 document.getElementById('totalTime').innerText = formatTime(duration);
-                currentBPM = detectBPM(bufferPista);
-                document.getElementById('bpmText').innerText = currentBPM;
-            } else {
-                bufferVoz = newBuffer;
-            }
-            btnElement.classList.add('ready');
-            btnElement.innerText = type.toUpperCase() + " LISTA";
-        } catch (e) {
-            btnElement.innerText = "ERROR DE AUDIO";
-            console.error("Fallo de decodificación:", e);
-        }
+            } else { bufferVoz = newBuf; }
+            btnElement.classList.add('ready'); btnElement.innerText = type.toUpperCase() + " LISTA";
+        } catch (e) { btnElement.innerText = "ERROR"; }
     }
 
-    document.getElementById('filePista').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); });
-    document.getElementById('fileVoz').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); });
-
-    document.getElementById('volPista').oninput = e => { if(volNodePista) volNodePista.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('volV1').oninput = e => { if(volNodeV1) volNodeV1.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('volV2').oninput = e => { if(volNodeV2) volNodeV2.volume.value = Tone.gainToDb(e.target.value); };
-    document.getElementById('volV3').oninput = e => { if(volNodeV3) volNodeV3.volume.value = Tone.gainToDb(e.target.value); };
-
-    function updateVisuals() {
-        if (!isPlaying) return;
-        let elapsed = Tone.now() - startTime + pausedAt;
-        if (elapsed >= duration) { stopAudio(); return; }
-        document.getElementById('currentTime').innerText = formatTime(elapsed);
-        document.getElementById('progBar').style.width = ((elapsed / duration) * 100) + "%";
-        animFrame = requestAnimationFrame(updateVisuals);
-    }
-
-    function stopAudio() {
-        if (playerPista) playerPista.stop();
-        if (playerV1) playerV1.stop(); if (playerV2) playerV2.stop(); if (playerV3) playerV3.stop();
-        document.getElementById('playBtn').innerText = "▶";
-        cancelAnimationFrame(animFrame);
-        pausedAt = Tone.now() - startTime + pausedAt;
-        isPlaying = false;
-    }
+    document.getElementById('filePista').onchange = function(){ loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); };
+    document.getElementById('fileVoz').onchange = function(){ loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); };
 
     document.getElementById('playBtn').onclick = async () => {
-        if (typeof Tone === 'undefined') return;
-        if (!bufferPista) return alert("Falta cargar la Pista Instrumental.");
+        if (!bufferPista || typeof Tone === 'undefined') return;
         await Tone.start();
-        
         if (isPlaying) {
-            stopAudio();
+            if(playerPista) playerPista.stop(); if(playerV1) playerV1.stop();
+            isPlaying = false; this.innerText = "▶";
         } else {
             playerPista = new Tone.Player(bufferPista).connect(volNodePista);
-            if (bufferVoz) {
+            if(bufferVoz) {
                 playerV1 = new Tone.Player(bufferVoz).connect(volNodeV1);
                 playerV2 = new Tone.Player(bufferVoz).connect(volNodeV2);
                 playerV3 = new Tone.Player(bufferVoz).connect(volNodeV3);
                 playerV1.start(0, pausedAt); playerV2.start(0, pausedAt); playerV3.start(0, pausedAt);
             }
             playerPista.start(0, pausedAt);
-            
-            startTime = Tone.now();
-            isPlaying = true;
-            document.getElementById('playBtn').innerText = "⏸";
-            updateVisuals();
+            startTime = Tone.now(); isPlaying = true; this.innerText = "⏸";
         }
     };
 
-    const pitchSlider = document.getElementById('masterPitch');
-    pitchSlider.addEventListener('input', () => {
-        const val = parseInt(pitchSlider.value);
-        const idx = (val >= 0) ? val % 12 : (12 + (val % 12)) % 12;
-        const notaTonica = notas[idx];
-        
-        document.getElementById('tonalidad').innerText = `TONO: ${notaTonica.toUpperCase()}`;
-        document.getElementById('currChord').innerText = notaTonica;
-        const t = triadas[notaTonica];
-        document.getElementById('n1').innerText = t[0];
-        document.getElementById('n2').innerText = t[1];
-        document.getElementById('n3').innerText = t[2];
-        
-        if(shiftPista) {
-            shiftPista.pitch = val;
-            shiftV1.pitch = val;
-            shiftV2.pitch = val + 4; 
-            shiftV3.pitch = val + 7; 
-        }
-    });
-
-    document.getElementById('recordBtn').onclick = () => {
-        if (typeof Tone === 'undefined') return;
-        if (!isRecording) {
-            chunks = [];
-            mediaRecorder = new MediaRecorder(destNode.stream);
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'JapoisesPro_ToneMix.ogg';
-                a.click();
-            };
-            mediaRecorder.start();
-            document.getElementById('recordBtn').style.background = "var(--neon-red)";
-            document.getElementById('recordBtn').style.color = "#fff";
-            document.getElementById('recordBtn').innerText = "PARAR REC";
-            isRecording = true;
-        } else {
-            mediaRecorder.stop();
-            document.getElementById('recordBtn').style.background = "#1a1a1a";
-            document.getElementById('recordBtn').style.color = "var(--neon-red)";
-            document.getElementById('recordBtn').innerText = "GUARDAR MIX";
-            isRecording = false;
-        }
-    };
-
-    let metronomoInterval;
-    let metronomoActivo = false;
-    document.getElementById('metronomeBtn').onclick = () => {
-        if (typeof Tone === 'undefined') return;
-        if (metronomoActivo) {
-            clearInterval(metronomoInterval);
-            document.getElementById('metronomeBtn').style.background = "#1a1a1a";
-            document.getElementById('metronomeBtn').style.color = "var(--neon-blue)";
-            metronomoActivo = false;
-        } else {
-            const msPorBeat = 60000 / currentBPM;
-            document.getElementById('metronomeBtn').style.background = "var(--neon-orange)";
-            document.getElementById('metronomeBtn').style.color = "#000";
-            metronomoActivo = true;
-
-            metronomoInterval = setInterval(() => {
-                const osc = Tone.context.createOscillator();
-                const gain = Tone.context.createGain();
-                osc.connect(gain); gain.connect(Tone.context.destination); gain.connect(destNode);
-                osc.frequency.value = 1000;
-                gain.gain.setValueAtTime(0.8, Tone.context.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, Tone.context.currentTime + 0.05);
-                osc.start(); osc.stop(Tone.context.currentTime + 0.05);
-            }, msPorBeat);
-        }
+    document.getElementById('masterPitch').oninput = function() {
+        let val = parseInt(this.value);
+        let nota = notas[(val >= 0) ? val % 12 : (12 + (val % 12)) % 12];
+        document.getElementById('tonalidad').innerText = "TONO: " + nota;
+        document.getElementById('currChord').innerText = nota;
+        if(shiftPista) { shiftPista.pitch = val; shiftV1.pitch = val; shiftV2.pitch = val+4; shiftV3.pitch = val+7; }
     };
 </script>
 </body>
 </html>
+
