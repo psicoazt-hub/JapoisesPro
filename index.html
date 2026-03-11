@@ -130,11 +130,10 @@
     let bufferPista = null, bufferVoz = null;
     let playerPista, playerV1, playerV2, playerV3;
     
-    // Nodos de control Tone.js
     const shiftPista = new Tone.PitchShift(0).toDestination();
     const shiftV1 = new Tone.PitchShift(0).toDestination();
-    const shiftV2 = new Tone.PitchShift(4).toDestination(); // 2da voz base
-    const shiftV3 = new Tone.PitchShift(7).toDestination(); // 3ra voz base
+    const shiftV2 = new Tone.PitchShift(4).toDestination(); 
+    const shiftV3 = new Tone.PitchShift(7).toDestination(); 
     
     const volNodePista = new Tone.Volume(0).connect(shiftPista);
     const volNodeV1 = new Tone.Volume(0).connect(shiftV1);
@@ -146,7 +145,6 @@
     
     let destNode, mediaRecorder, chunks = [], isRecording = false;
 
-    // Configurar grabadora en el destino final
     Tone.Destination.ready.then(() => {
         destNode = Tone.context.createMediaStreamDestination();
         Tone.Destination.connect(destNode);
@@ -158,24 +156,29 @@
     }
 
     function detectBPM(buffer) {
-        const data = buffer.getChannelData(0);
-        let peaks = [], threshold = 0.8;
-        for(let i=0; i<data.length; i+=1000) { if(data[i] > threshold) peaks.push(i); }
-        if(peaks.length < 2) return 120;
-        let intervals = [];
-        for(let i=1; i<peaks.length; i++) { intervals.push(peaks[i] - peaks[i-1]); }
-        let avgDist = intervals.reduce((a,b)=>a+b,0) / intervals.length;
-        let bpmCalc = Math.round(60 / (avgDist / buffer.sampleRate));
-        return (bpmCalc > 60 && bpmCalc < 200) ? bpmCalc : 120;
+        try {
+            const data = buffer.getChannelData(0);
+            let peaks = [], threshold = 0.8;
+            for(let i=0; i<data.length; i+=1000) { if(data[i] > threshold) peaks.push(i); }
+            if(peaks.length < 2) return 120;
+            let intervals = [];
+            for(let i=1; i<peaks.length; i++) { intervals.push(peaks[i] - peaks[i-1]); }
+            let avgDist = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+            let bpmCalc = Math.round(60 / (avgDist / buffer.sampleRate));
+            return (bpmCalc > 60 && bpmCalc < 200) ? bpmCalc : 120;
+        } catch(e) { return 120; }
     }
 
-    function loadAudio(fileElement, btnElement, type) {
+    async function loadAudio(fileElement, btnElement, type) {
         const file = fileElement.files[0];
         if (!file) return;
-        btnElement.innerText = "CARGANDO MOTOR...";
-        const url = URL.createObjectURL(file);
+        btnElement.innerText = "DECODIFICANDO...";
         
-        const newBuffer = new Tone.ToneAudioBuffer(url, () => {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const audioBuffer = await Tone.context.decodeAudioData(arrayBuffer);
+            const newBuffer = new Tone.ToneAudioBuffer(audioBuffer);
+
             if (type === 'pista') {
                 bufferPista = newBuffer;
                 duration = bufferPista.duration;
@@ -187,7 +190,10 @@
             }
             btnElement.classList.add('ready');
             btnElement.innerText = type.toUpperCase() + " LISTA";
-        });
+        } catch (e) {
+            btnElement.innerText = "ERROR DE AUDIO";
+            console.error("Fallo de decodificación:", e);
+        }
     }
 
     document.getElementById('filePista').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); });
@@ -217,7 +223,7 @@
     }
 
     document.getElementById('playBtn').onclick = async () => {
-        if (!bufferPista) return alert("Falta cargar la Pista Instrumental, carnal.");
+        if (!bufferPista) return alert("Falta cargar la Pista Instrumental.");
         await Tone.start();
         
         if (isPlaying) {
@@ -254,8 +260,8 @@
         
         shiftPista.pitch = val;
         shiftV1.pitch = val;
-        shiftV2.pitch = val + 4; // Ajuste para 2da voz
-        shiftV3.pitch = val + 7; // Ajuste para 3ra voz
+        shiftV2.pitch = val + 4; 
+        shiftV3.pitch = val + 7; 
     });
 
     document.getElementById('recordBtn').onclick = () => {
@@ -312,4 +318,3 @@
 </script>
 </body>
 </html>
-
