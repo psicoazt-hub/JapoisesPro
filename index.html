@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Japoises Pro">
     <link rel="apple-touch-icon" href="./icono.png">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="./tone.js"></script>
 
     <script>
         const manifest = {
@@ -59,7 +59,7 @@
 <body>
 
 <div class="header">
-    <img src="./icono.png" class="logo-main" alt="Logo">
+    <img src="./icono.png" class="logo-main" alt="Logo" onerror="this.style.display='none'">
     <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: var(--neon-blue); margin-top: 10px;">JAPOISES PRO</div>
 </div>
 
@@ -115,8 +115,8 @@
     <button class="btn-action" id="metronomeBtn">CLIC AUTO</button>
 </div>
 
-<input type="file" id="filePista" style="display:none" accept="audio/*">
-<input type="file" id="fileVoz" style="display:none" accept="audio/*">
+<input type="file" id="filePista" style="display:none" accept="audio/*" onclick="this.value=null">
+<input type="file" id="fileVoz" style="display:none" accept="audio/*" onclick="this.value=null">
 
 <script>
     const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
@@ -130,25 +130,36 @@
     let bufferPista = null, bufferVoz = null;
     let playerPista, playerV1, playerV2, playerV3;
     
-    const shiftPista = new Tone.PitchShift(0).toDestination();
-    const shiftV1 = new Tone.PitchShift(0).toDestination();
-    const shiftV2 = new Tone.PitchShift(4).toDestination(); 
-    const shiftV3 = new Tone.PitchShift(7).toDestination(); 
+    // Si Tone no cargó porque falta el archivo, tira la alerta
+    window.onload = () => {
+        if (typeof Tone === 'undefined') {
+            alert("Falta el motor tone.js en tu GitHub. Las pistas no van a cargar hasta que lo subas.");
+        }
+    };
+
+    let destNode, mediaRecorder, chunks = [], isRecording = false;
+    let shiftPista, shiftV1, shiftV2, shiftV3;
+    let volNodePista, volNodeV1, volNodeV2, volNodeV3;
     
-    const volNodePista = new Tone.Volume(0).connect(shiftPista);
-    const volNodeV1 = new Tone.Volume(0).connect(shiftV1);
-    const volNodeV2 = new Tone.Volume(-2).connect(shiftV2);
-    const volNodeV3 = new Tone.Volume(-2).connect(shiftV3);
+    if (typeof Tone !== 'undefined') {
+        shiftPista = new Tone.PitchShift(0).toDestination();
+        shiftV1 = new Tone.PitchShift(0).toDestination();
+        shiftV2 = new Tone.PitchShift(4).toDestination(); 
+        shiftV3 = new Tone.PitchShift(7).toDestination(); 
+        
+        volNodePista = new Tone.Volume(0).connect(shiftPista);
+        volNodeV1 = new Tone.Volume(0).connect(shiftV1);
+        volNodeV2 = new Tone.Volume(-2).connect(shiftV2);
+        volNodeV3 = new Tone.Volume(-2).connect(shiftV3);
+
+        Tone.Destination.ready.then(() => {
+            destNode = Tone.context.createMediaStreamDestination();
+            Tone.Destination.connect(destNode);
+        });
+    }
 
     let isPlaying = false, duration = 0, currentBPM = 120, animFrame;
     let startTime = 0, pausedAt = 0;
-    
-    let destNode, mediaRecorder, chunks = [], isRecording = false;
-
-    Tone.Destination.ready.then(() => {
-        destNode = Tone.context.createMediaStreamDestination();
-        Tone.Destination.connect(destNode);
-    });
 
     function formatTime(s) {
         let min = Math.floor(s / 60); let sec = Math.floor(s % 60);
@@ -169,7 +180,9 @@
         } catch(e) { return 120; }
     }
 
+    // Lector directo de bytes para evitar ahogar la memoria RAM
     async function loadAudio(fileElement, btnElement, type) {
+        if (typeof Tone === 'undefined') return alert("Falta tone.js");
         const file = fileElement.files[0];
         if (!file) return;
         btnElement.innerText = "DECODIFICANDO...";
@@ -199,10 +212,10 @@
     document.getElementById('filePista').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); });
     document.getElementById('fileVoz').addEventListener('change', function() { loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); });
 
-    document.getElementById('volPista').oninput = e => volNodePista.volume.value = Tone.gainToDb(e.target.value);
-    document.getElementById('volV1').oninput = e => volNodeV1.volume.value = Tone.gainToDb(e.target.value);
-    document.getElementById('volV2').oninput = e => volNodeV2.volume.value = Tone.gainToDb(e.target.value);
-    document.getElementById('volV3').oninput = e => volNodeV3.volume.value = Tone.gainToDb(e.target.value);
+    document.getElementById('volPista').oninput = e => { if(volNodePista) volNodePista.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('volV1').oninput = e => { if(volNodeV1) volNodeV1.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('volV2').oninput = e => { if(volNodeV2) volNodeV2.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('volV3').oninput = e => { if(volNodeV3) volNodeV3.volume.value = Tone.gainToDb(e.target.value); };
 
     function updateVisuals() {
         if (!isPlaying) return;
@@ -223,6 +236,7 @@
     }
 
     document.getElementById('playBtn').onclick = async () => {
+        if (typeof Tone === 'undefined') return;
         if (!bufferPista) return alert("Falta cargar la Pista Instrumental.");
         await Tone.start();
         
@@ -258,13 +272,16 @@
         document.getElementById('n2').innerText = t[1];
         document.getElementById('n3').innerText = t[2];
         
-        shiftPista.pitch = val;
-        shiftV1.pitch = val;
-        shiftV2.pitch = val + 4; 
-        shiftV3.pitch = val + 7; 
+        if(shiftPista) {
+            shiftPista.pitch = val;
+            shiftV1.pitch = val;
+            shiftV2.pitch = val + 4; 
+            shiftV3.pitch = val + 7; 
+        }
     });
 
     document.getElementById('recordBtn').onclick = () => {
+        if (typeof Tone === 'undefined') return;
         if (!isRecording) {
             chunks = [];
             mediaRecorder = new MediaRecorder(destNode.stream);
@@ -293,6 +310,7 @@
     let metronomoInterval;
     let metronomoActivo = false;
     document.getElementById('metronomeBtn').onclick = () => {
+        if (typeof Tone === 'undefined') return;
         if (metronomoActivo) {
             clearInterval(metronomoInterval);
             document.getElementById('metronomeBtn').style.background = "#1a1a1a";
