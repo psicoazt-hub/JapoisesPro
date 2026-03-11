@@ -22,10 +22,10 @@
 <body>
 
 <div class="panel">
-    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA (ESCANEANDO TÓNICA)</button>
+    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA (ANÁLISIS CROMÁTICO)</button>
     <button class="btn-load" id="btnV" onclick="document.getElementById('fV').click()">2. CARGAR VOZ</button>
     <div style="font-size: 16px; color: var(--orange); font-weight: bold; margin-top: 5px;">
-        TONALIDAD REAL: <span id="info">--</span>
+        TÓNICA DETECTADA: <span id="info">--</span>
     </div>
 </div>
 
@@ -42,7 +42,7 @@
 </div>
 
 <div class="nav-bar">
-    <button id="btnRec" style="color:var(--red); border:2px solid var(--red); background:none; padding:15px; border-radius:12px; font-weight:bold;">GRABAR MIX</button>
+    <button id="btnRec" style="color:var(--red); border:2px solid var(--red); background:none; padding:15px; border-radius:12px; font-weight:bold;">GRABAR</button>
     <button class="btn-play" id="btnPlay">▶</button>
     <div style="width:80px"></div>
 </div>
@@ -62,7 +62,7 @@
         sP = new Tone.PitchShift(0).toDestination();
         s1 = new Tone.PitchShift(0).toDestination();
         s2 = new Tone.PitchShift(4).toDestination();
-                s3 = new Tone.PitchShift(7).toDestination();
+        s3 = new Tone.PitchShift(7).toDestination();
         [sP, s1, s2, s3].forEach(s => s.connect(dest));
         vP = new Tone.Volume(0).connect(sP);
         v1 = new Tone.Volume(0).connect(s1);
@@ -74,46 +74,50 @@
         rec.onstop = () => {
             const blob = new Blob(chunks, { type: 'audio/webm' });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob); a.download = 'japo_mix_final.webm'; a.click();
+            a.href = URL.createObjectURL(blob); a.download = 'mix_japoises.webm'; a.click();
         };
     }
 
-    // Escaneo profundo de toda la rola para encontrar la tónica
-    async function escaneoProfundo(buffer) {
+    // Análisis Cromático: Escanea la energía de las 12 notas
+    async function analizadorCromatico(buffer) {
         const data = buffer.getChannelData(0);
-        const total = data.length;
-        const step = Math.floor(total / 10); // Escaneamos 10 puntos de toda la rola
-        let freqCounts = new Array(12).fill(0);
-
-        for (let i = 0; i < total; i += step) {
-            // Analizamos pequeños bloques de 4096 muestras
-            const chunk = data.slice(i, i + 4096);
-            let picos = 0;
-            for(let j=1; j<chunk.length; j++) if(chunk[j] > 0 && chunk[j-1] <= 0) picos++;
-            let freq = picos * (buffer.sampleRate / 4096);
+        const sampleRate = buffer.sampleRate;
+        const chromaEnergia = new Array(12).fill(0);
+        
+        // Saltamos intros y escaneamos puntos clave de la canción
+        const puntosInteres = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+        
+        puntosInteres.forEach(p => {
+            const start = Math.floor(data.length * p);
+            const size = 8192; // Ventana grande para precisión
+            const segment = data.slice(start, start + size);
             
-            // Mapeo rústico de frecuencia a nota
-            let n = Math.round(12 * Math.log2(freq / 440)) + 9;
-            if(!isNaN(n)) freqCounts[Math.abs(n % 12)]++;
-        }
-        
-        // La nota que más se repite en toda la canción es la tónica
-        baseIdx = freqCounts.indexOf(Math.max(...freqCounts));
-        
-        // Ajuste manual por si el escaneo da notas raras por distorsión
-        if(baseIdx > 11) baseIdx = 7; 
+            for (let n = 0; n < 12; n++) {
+                // Frecuencia de referencia para cada nota (Octava 3 y 4)
+                const freq = 440 * Math.pow(2, (n - 21) / 12); 
+                // Filtro rústico de magnitud
+                let mag = 0;
+                for(let j=0; j<segment.length; j++) {
+                    mag += Math.abs(segment[j] * Math.sin(2 * Math.PI * freq * (j/sampleRate)));
+                }
+                chromaEnergia[n] += mag;
+            }
+        });
 
+        // La nota con más energía acumulada gana
+        baseIdx = chromaEnergia.indexOf(Math.max(...chromaEnergia));
+        
         document.getElementById('info').innerText = notas[baseIdx];
         document.getElementById('cBox').innerText = notas[baseIdx];
     }
 
     async function load(f, b, type) {
-        b.innerText = "ESCANEANDO ROLA...";
+        b.innerText = "ESCANEANDO ENERGÍA...";
         const data = await f.arrayBuffer();
         const dec = await Tone.context.decodeAudioData(data);
         if(type==='p') { 
             bufP = new Tone.ToneAudioBuffer(dec); 
-            await escaneoProfundo(dec); 
+            await analizadorCromatico(dec); 
         } else { 
             bufV = new Tone.ToneAudioBuffer(dec); 
         }
@@ -146,18 +150,14 @@
         let finalIdx = (baseIdx + shift) % 12;
         if (finalIdx < 0) finalIdx += 12;
         document.getElementById('cBox').innerText = notas[finalIdx];
-        if(sP) { 
-            sP.pitch = shift; s1.pitch = shift; 
-            s2.pitch = shift + 4; s3.pitch = shift + 7; 
-        }
+        if(sP) { sP.pitch = shift; s1.pitch = shift; s2.pitch = shift + 4; s3.pitch = shift + 7; }
     };
 
     document.getElementById('btnRec').onclick = () => {
         if(!isP) return;
-        if(!isR) { rec.start(); isR = true; document.getElementById('btnRec').innerText = "STOP"; }
+        if(!isR) { rec.start(); isR = true; document.getElementById('btnRec').innerText = "FIN"; }
         else { rec.stop(); isR = false; document.getElementById('btnRec').innerText = "GRABAR"; }
     };
 </script>
 </body>
 </html>
-
