@@ -2,174 +2,154 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Japoises Pro</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Japoises Pro">
     <link rel="apple-touch-icon" href="./icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <script src="tone.js"></script>
-
-    <script>
-        const manifest = {
-            name: "Japoises Pro", short_name: "Japoises", display: "standalone",
-            start_url: location.href, background_color: "#050505", theme_color: "#00f2ff",
-            icons: [{src: "./icono.png", sizes: "512x512", type: "image/png", purpose: "any maskable"}]
-        };
-        const blobMan = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blobMan)}">`);
-    </script>
+    <script src="./tone.js" onerror="this.src='https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js'"></script>
 
     <style>
-        :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --neon-red: #ff003c; --bg: #050505; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 120px; font-size: 18px; }
-        .header { background: #111; padding: 20px; text-align: center; border-bottom: 3px solid var(--neon-blue); }
-        .logo-main { width: 120px; filter: drop-shadow(0 0 15px var(--neon-blue)); }
-        .panel { background: #111; margin: 20px; border-radius: 16px; border: 2px solid #222; padding: 20px; text-align: center; }
-        .loader-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-        .btn-load { background: #1a1a1a; border: 2px solid var(--neon-orange); color: var(--neon-orange); padding: 20px; border-radius: 12px; font-weight: bold; font-size: 18px; }
-        .btn-load.ready { background: var(--neon-orange); color: #000; }
-        .progress-container { width: 100%; background: #222; height: 16px; border-radius: 8px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { width: 0%; background: var(--neon-blue); height: 100%; transition: width 0.1s linear; }
-        .time-display { font-size: 16px; color: #888; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
-        .chord-unit { width: 70px; height: 70px; line-height: 70px; background: #1a1a1a; color: var(--neon-blue); font-weight: bold; font-size: 28px; border-radius: 12px; border: 2px solid var(--neon-blue); margin: 0 auto; }
-        input[type=range] { width: 100%; -webkit-appearance: none; height: 16px; background: #222; border-radius: 8px; outline: none; border: 2px solid #333; margin: 20px 0; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 40px; height: 40px; background: var(--neon-blue); border-radius: 50%; box-shadow: 0 0 15px var(--neon-blue); }
-        .mixer { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .voice-strip { background: #0a0a0a; padding: 15px 5px; border-radius: 12px; width: 24%; text-align: center; border: 2px solid #222; }
-        .v-label { font-size: 12px; margin-bottom: 15px; color: #888; font-weight: bold; }
-        .note-name { font-size: 20px; font-weight: bold; color: var(--neon-blue); margin-top: 15px; }
-        .vol-slider { -webkit-appearance: slider-vertical; width: 30px; height: 120px; background: #222; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 3px solid #222; z-index: 100; align-items: center; }
-        .btn-action { background: #1a1a1a; border: 2px solid var(--neon-blue); color: var(--neon-blue); padding: 15px 20px; border-radius: 16px; font-weight: bold; font-size: 16px; }
-        .btn-play { background: var(--neon-blue); color: #000; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 32px; margin-top: -40px; box-shadow: 0 0 25px rgba(0,242,255,0.5); }
+        :root { --neon-blue: #00f2ff; --neon-orange: #ff8c00; --bg: #050505; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 120px; }
+        .header { background: #111; padding: 15px; text-align: center; border-bottom: 3px solid var(--neon-blue); }
+        .panel { background: #111; margin: 15px; border-radius: 12px; border: 2px solid #222; padding: 20px; text-align: center; }
+        .btn-load { background: #1a1a1a; border: 2px solid var(--neon-orange); color: var(--neon-orange); padding: 20px; border-radius: 10px; font-weight: bold; font-size: 18px; width: 100%; margin-bottom: 10px; }
+        .btn-load.ready { background: var(--neon-orange); color: #000; border-color: #fff; }
+        .chord-box { width: 90px; height: 90px; line-height: 90px; background: #000; color: var(--neon-blue); font-weight: bold; font-size: 35px; border-radius: 15px; border: 3px solid var(--neon-blue); margin: 15px auto; box-shadow: 0 0 15px var(--neon-blue); }
+        .mixer { display: flex; justify-content: space-around; margin-top: 20px; }
+        .v-strip { width: 23%; text-align: center; background: #0a0a0a; padding: 10px 0; border-radius: 8px; border: 1px solid #222; }
+        .vol-slider { -webkit-appearance: slider-vertical; width: 40px; height: 120px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 20px 0; border-top: 2px solid #222; z-index: 1000; }
+        .btn-play { background: var(--neon-blue); border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 35px; margin-top: -45px; box-shadow: 0 0 25px var(--neon-blue); color: #000; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="./icono.png" class="logo-main" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/107/107198.png'">
-    <div style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: var(--neon-blue); margin-top: 10px;">JAPOISES PRO</div>
-    <button onclick="location.reload(true)" style="background:none; border:1px solid #333; color:#555; font-size:10px; margin-top:5px;">LIMPIAR CACHÉ</button>
-</div>
-
-<div class="panel" id="statusPanel" style="background:#400; display:none; padding:10px; font-size:14px;">
-    ⚠️ El archivo tone.js no se cargó. Revisa que el nombre en GitHub esté todo en minúsculas.
+    <div style="font-size: 22px; font-weight: 900; color: var(--neon-blue);">JAPOISES PRO</div>
+    <button onclick="location.reload(true)" style="background:none; color:#444; border:1px solid #333; font-size:10px; margin-top:5px;">RECARGAR MOTOR</button>
 </div>
 
 <div class="panel">
-    <div class="loader-group">
-        <button class="btn-load" id="btnLoadPista" onclick="document.getElementById('filePista').click()">1. PISTA (KARAOKE)</button>
-        <button class="btn-load" id="btnLoadVoz" onclick="document.getElementById('fileVoz').click()">2. VOZ (ACAPELA)</button>
-    </div>
-    <div class="progress-container"><div class="progress-bar" id="progBar"></div></div>
-    <div class="time-display">
-        <span id="currentTime">0:00</span>
-        <span style="color: var(--neon-orange);">BPM: <span id="bpmText">--</span> | <span id="tonalidad">TONO: DO</span></span>
-        <span id="totalTime">0:00</span>
+    <button class="btn-load" id="btnP" onclick="document.getElementById('fP').click()">1. CARGAR PISTA (M4A/MP3)</button>
+    <button class="btn-load" id="btnV" onclick="document.getElementById('fV').click()">2. CARGAR VOZ (ACAPELA)</button>
+    <div style="margin-top:10px; color: var(--neon-orange); font-weight:bold;">
+        TONO ACTUAL: <span id="txtTono">DO</span>
     </div>
 </div>
 
 <div class="panel">
-    <div class="time-display"><span>GRAVE (-12)</span><span style="font-size: 12px;">PITCH SIN AFECTAR VELOCIDAD</span><span>AGUDO (+12)</span></div>
-    <input type="range" id="masterPitch" min="-12" max="12" value="0">
-    <div class="chord-unit" id="currChord">--</div>
+    <div style="font-size:12px; color:#888; margin-bottom:10px;">DESLIZA PARA CAMBIAR EL TONO</div>
+    <input type="range" id="pSlider" min="-12" max="12" value="0" style="width:100%; height:30px;">
+    <div class="chord-box" id="cBox">DO</div>
+    
     <div class="mixer">
-        <div class="voice-strip"><div class="v-label">PISTA</div><input type="range" class="vol-slider" id="volPista" min="0" max="2" step="0.1" value="1"><div class="note-name">-</div></div>
-        <div class="voice-strip"><div class="v-label">1RA</div><input type="range" class="vol-slider" id="volV1" min="0" max="2" step="0.1" value="1"><div class="note-name" id="n1">Do</div></div>
-        <div class="voice-strip"><div class="v-label">2DA</div><input type="range" class="vol-slider" id="volV2" min="0" max="2" step="0.1" value="0.8"><div class="note-name" id="n2">Mi</div></div>
-        <div class="voice-strip"><div class="v-label">3RA</div><input type="range" class="vol-slider" id="volV3" min="0" max="2" step="0.1" value="0.8"><div class="note-name" id="n3">Sol</div></div>
+        <div class="v-strip">PISTA<br><input type="range" class="vol-slider" id="volP" min="0" max="2" step="0.1" value="1"></div>
+        <div class="v-strip">1RA<br><input type="range" class="vol-slider" id="vol1" min="0" max="2" step="0.1" value="1"></div>
+        <div class="v-strip">2DA<br><input type="range" class="vol-slider" id="vol2" min="0" max="2" step="0.1" value="0.7"></div>
+        <div class="v-strip">3RA<br><input type="range" class="vol-slider" id="vol3" min="0" max="2" step="0.1" value="0.7"></div>
     </div>
 </div>
 
 <div class="nav-bar">
-    <button class="btn-action" id="recordBtn" style="color:var(--neon-red); border-color:var(--neon-red);">GUARDAR MIX</button>
-    <button class="btn-play" id="playBtn">▶</button>
-    <button class="btn-action" id="metronomeBtn">CLIC AUTO</button>
+    <div style="width:80px"></div>
+    <button class="btn-play" id="btnPlay">▶</button>
+    <div style="width:80px"></div>
 </div>
 
-<input type="file" id="filePista" style="display:none" accept="audio/*" onclick="this.value=null">
-<input type="file" id="fileVoz" style="display:none" accept="audio/*" onclick="this.value=null">
+<input type="file" id="fP" style="display:none" accept="audio/*">
+<input type="file" id="fV" style="display:none" accept="audio/*">
 
 <script>
     const notas = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
-    const triadas = {"Do":["Do","Mi","Sol"],"Do#":["Do#","Fa","Sol#"],"Re":["Re","Fa#","La"],"Re#":["Re#","Sol","La#"],"Mi":["Mi","Sol#","Si"],"Fa":["Fa","La","Do"],"Fa#":["Fa#","La#","Do#"],"Sol":["Sol","Si","Re"],"Sol#":["Sol#","Do","Re#"],"La":["La","Do#","Mi"],"La#":["La#","Re","Fa"],"Si":["Si","Re#","Fa#"]};
+    let bufP, bufV, plyP, ply1, ply2, ply3, isP = false;
+    let sP, s1, s2, s3, vP, v1, v2, v3;
 
-    window.onerror = function() { document.getElementById('statusPanel').style.display = 'block'; };
-
-    let bufferPista, bufferVoz, playerPista, playerV1, playerV2, playerV3, isPlaying = false, duration = 0, currentBPM = 120, startTime = 0, pausedAt = 0;
-    let shiftPista, shiftV1, shiftV2, shiftV3, volNodePista, volNodeV1, volNodeV2, volNodeV3, destNode, mediaRecorder, chunks = [], isRecording = false;
-
-    // Solo arranca si Tone existe
-    setTimeout(() => {
-        if (typeof Tone === 'undefined') {
-            document.getElementById('statusPanel').style.display = 'block';
-            return;
-        }
-        
-        shiftPista = new Tone.PitchShift(0).toDestination();
-        shiftV1 = new Tone.PitchShift(0).toDestination();
-        shiftV2 = new Tone.PitchShift(4).toDestination(); 
-        shiftV3 = new Tone.PitchShift(7).toDestination(); 
-        volNodePista = new Tone.Volume(0).connect(shiftPista);
-        volNodeV1 = new Tone.Volume(0).connect(shiftV1);
-        volNodeV2 = new Tone.Volume(-2).connect(shiftV2);
-        volNodeV3 = new Tone.Volume(-2).connect(shiftV3);
-        
-        Tone.Destination.ready.then(() => {
-            destNode = Tone.context.createMediaStreamDestination();
-            Tone.Destination.connect(destNode);
-        });
-    }, 500);
-
-    function formatTime(s) { let min = Math.floor(s/60), sec = Math.floor(s%60); return min+":"+(sec<10?"0":"")+sec; }
-
-    async function loadAudio(fileElement, btnElement, type) {
-        if (typeof Tone === 'undefined') return;
-        const file = fileElement.files[0]; if (!file) return;
-        btnElement.innerText = "LEYENDO...";
-        try {
-            const ab = await file.arrayBuffer();
-            const decoded = await Tone.context.decodeAudioData(ab);
-            const newBuf = new Tone.ToneAudioBuffer(decoded);
-            if (type === 'pista') {
-                bufferPista = newBuf; duration = bufferPista.duration;
-                document.getElementById('totalTime').innerText = formatTime(duration);
-            } else { bufferVoz = newBuf; }
-            btnElement.classList.add('ready'); btnElement.innerText = type.toUpperCase() + " LISTA";
-        } catch (e) { btnElement.innerText = "ERROR"; }
+    // Inicialización de la consola de mezcla
+    function armarConsola() {
+        if(sP) return;
+        sP = new Tone.PitchShift(0).toDestination();
+        s1 = new Tone.PitchShift(0).toDestination();
+        s2 = new Tone.PitchShift(4).toDestination();
+        s3 = new Tone.PitchShift(7).toDestination();
+        vP = new Tone.Volume(0).connect(sP);
+        v1 = new Tone.Volume(0).connect(s1);
+        v2 = new Tone.Volume(-5).connect(s2);
+        v3 = new Tone.Volume(-5).connect(s3);
     }
 
-    document.getElementById('filePista').onchange = function(){ loadAudio(this, document.getElementById('btnLoadPista'), 'pista'); };
-    document.getElementById('fileVoz').onchange = function(){ loadAudio(this, document.getElementById('btnLoadVoz'), 'voz'); };
+    async function cargarArchivo(input, boton, esPista) {
+        const archivo = input.files[0];
+        if(!archivo) return;
+        
+        boton.innerText = "PROCESANDO...";
+        boton.style.borderColor = "#00f2ff";
 
-    document.getElementById('playBtn').onclick = async () => {
-        if (!bufferPista || typeof Tone === 'undefined') return;
+        try {
+            const data = await archivo.arrayBuffer();
+            const decoded = await Tone.context.decodeAudioData(data);
+            const tBuffer = new Tone.ToneAudioBuffer(decoded);
+            
+            if(esPista) bufP = tBuffer;
+            else bufV = tBuffer;
+
+            boton.innerText = "¡LISTO!";
+            boton.classList.add('ready');
+        } catch (error) {
+            console.error(error);
+            boton.innerText = "ERROR AL CARGAR";
+            alert("El archivo no se pudo decodificar. Intenta con otro M4A o MP3.");
+        }
+    }
+
+    document.getElementById('fP').onchange = e => cargarArchivo(e.target, document.getElementById('btnP'), true);
+    document.getElementById('fV').onchange = e => cargarArchivo(e.target, document.getElementById('btnV'), false);
+
+    document.getElementById('btnPlay').onclick = async () => {
+        if(!bufP) return alert("Primero carga la Pista 1.");
+        
         await Tone.start();
-        if (isPlaying) {
-            if(playerPista) playerPista.stop(); if(playerV1) playerV1.stop();
-            isPlaying = false; this.innerText = "▶";
+        armarConsola();
+
+        if(isP) {
+            if(plyP) plyP.stop(); if(ply1) ply1.stop();
+            if(ply2) ply2.stop(); if(ply3) ply3.stop();
+            isP = false;
+            document.getElementById('btnPlay').innerText = "▶";
         } else {
-            playerPista = new Tone.Player(bufferPista).connect(volNodePista);
-            if(bufferVoz) {
-                playerV1 = new Tone.Player(bufferVoz).connect(volNodeV1);
-                playerV2 = new Tone.Player(bufferVoz).connect(volNodeV2);
-                playerV3 = new Tone.Player(bufferVoz).connect(volNodeV3);
-                playerV1.start(0, pausedAt); playerV2.start(0, pausedAt); playerV3.start(0, pausedAt);
+            plyP = new Tone.Player(bufP).connect(vP);
+            if(bufV) {
+                ply1 = new Tone.Player(bufV).connect(v1);
+                ply2 = new Tone.Player(bufV).connect(v2);
+                ply3 = new Tone.Player(bufV).connect(v3);
+                ply1.start(); ply2.start(); ply3.start();
             }
-            playerPista.start(0, pausedAt);
-            startTime = Tone.now(); isPlaying = true; this.innerText = "⏸";
+            plyP.start();
+            isP = true;
+            document.getElementById('btnPlay').innerText = "⏸";
         }
     };
 
-    document.getElementById('masterPitch').oninput = function() {
+    // Control de volúmenes en tiempo real
+    document.getElementById('volP').oninput = e => { if(vP) vP.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('vol1').oninput = e => { if(v1) v1.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('vol2').oninput = e => { if(v2) v2.volume.value = Tone.gainToDb(e.target.value); };
+    document.getElementById('vol3').oninput = e => { if(v3) v3.volume.value = Tone.gainToDb(e.target.value); };
+
+    // Control de tono
+    document.getElementById('pSlider').oninput = function() {
         let val = parseInt(this.value);
-        let nota = notas[(val >= 0) ? val % 12 : (12 + (val % 12)) % 12];
-        document.getElementById('tonalidad').innerText = "TONO: " + nota;
-        document.getElementById('currChord').innerText = nota;
-        if(shiftPista) { shiftPista.pitch = val; shiftV1.pitch = val; shiftV2.pitch = val+4; shiftV3.pitch = val+7; }
+        let n = notas[(val >= 0) ? val % 12 : (12 + (val % 12)) % 12];
+        document.getElementById('txtTono').innerText = n.toUpperCase();
+        document.getElementById('cBox').innerText = n.toUpperCase();
+        if(sP) {
+            sP.pitch = val;
+            s1.pitch = val;
+            s2.pitch = val + 4;
+            s3.pitch = val + 7;
+        }
     };
 </script>
 </body>
